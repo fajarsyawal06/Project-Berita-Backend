@@ -34,13 +34,9 @@ class NewsListingController extends Controller
             $q->where('jenis_publikasi', $jenisPublikasi);
         });
 
-        // 5. Filter Pencarian Text (Global Search)
+        // 5. Filter Pencarian Text (Global Search FR-TP-02)
         $query->when($request->search, function ($q, $search) {
-            $q->where(function ($subQ) use ($search) {
-                $subQ->where('judul', 'like', "%{$search}%")
-                     ->orWhere('what_content', 'like', "%{$search}%")
-                     ->orWhere('who_involved', 'like', "%{$search}%");
-            });
+            app(\App\Services\NewsSearchService::class)->applySearch($q, $search);
         });
 
         return $query;
@@ -59,8 +55,11 @@ class NewsListingController extends Controller
         $allowedSortBy = ['created_at', 'views_count', 'judul'];
         $allowedSortOrder = ['asc', 'desc'];
 
-        // Jika parameter valid, terapkan urutannya ke query
-        if (in_array($sortBy, $allowedSortBy) && in_array($sortOrder, $allowedSortOrder)) {
+        // Jika parameter valid, terapkan urutannya ke query (KECUALI sedang melakukan pencarian)
+        if ($request->filled('search')) {
+            // Pencarian sudah diurutkan berdasarkan relevance_score oleh NewsSearchService
+            // Kita tidak melakukan overriding sorting di sini.
+        } elseif (in_array($sortBy, $allowedSortBy) && in_array($sortOrder, $allowedSortOrder)) {
             // Jika memilih penonton, urutkan berdasarkan 'views_count'
             $query->orderBy($sortBy, $sortOrder);
         } else {
@@ -91,7 +90,14 @@ class NewsListingController extends Controller
         $query = $this->applyFilters($query, $request);
         $query = $this->applySorting($query, $request);
 
-        return response()->json($query->paginate(10));
+        $paginator = $query->paginate(10);
+
+        // Terapkan Highlighting jika ada pencarian
+        if ($request->filled('search')) {
+            $paginator = app(\App\Services\NewsSearchService::class)->highlightResults($paginator, $request->search);
+        }
+
+        return response()->json($paginator);
     }
 
     /**
