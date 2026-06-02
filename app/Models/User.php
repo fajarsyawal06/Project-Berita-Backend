@@ -64,4 +64,12 @@ class User extends Authenticatable
     {
         return $this->belongsTo(SatuanKerja::class);
     }
+
+   
+    // User bisa menyimpan/bookmark banyak berita
+    public function savedNews()
+    {
+        return $this->belongsToMany(News::class, 'saved_news', 'user_id', 'news_id')
+                    ->withTimestamps();
+    }
 }

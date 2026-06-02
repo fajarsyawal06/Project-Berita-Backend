@@ -19,16 +19,28 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Rute umum untuk user login
     Route::post('/news', [NewsController::class, 'store'])->middleware('role:P-01,P-02'); // Kontributor & Editor
-    Route::get('/news', [NewsController::class, 'index']); // Akan kita handle difilter via Controller (milik sendiri vs antrean)
+    Route::get('/news', [NewsController::class, 'index']); 
     Route::delete('/news/{id}', [NewsController::class, 'destroy'])->middleware('role:P-01,P-02');
 
-    // ... (Route yang sudah ada) ...
+    /* =======================================================================
+       👇 RUTE BARU KHUSUS FITUR FR-ID-01 (BOOKMARK & DRAFT AUTO-SAVE) 👇
+       ======================================================================= */
+    
+    // PILAR 1: BOOKMARK (Berita Tersimpan)
+    Route::post('/news/{id}/bookmark', [NewsController::class, 'toggleBookmark']); // Menyimpan / Batal Menyimpan Berita (Toggle)
+    Route::get('/news/bookmarked', [NewsListingController::class, 'bookmarkedIndex']); // Mengambil list berita yang di-bookmark oleh user login
+
+    // PILAR 2: AUTO-SAVE DRAFT (Hanya Kontributor & Editor yang bisa bikin draft)
+    Route::post('/news/draft', [NewsController::class, 'storeDraft'])->middleware('role:P-01,P-02'); // Buat draft pertama kali
+    Route::put('/news/draft/{id}', [NewsController::class, 'updateDraft'])->middleware('role:P-01,P-02'); // Auto-save update draft (Debounce)
+
+    /* ======================================================================= */
 
     // Rute khusus workflow (Editor/Admin)
-    Route::post('/news/{id}/submit', [NewsWorkflowController::class, 'submit'])->middleware('role:P-01,P-02'); // Submit dari DRAFT
-    Route::post('/news/{id}/approve', [NewsWorkflowController::class, 'approve'])->middleware('role:P-02,P-04'); // Editor & Admin
+    Route::post('/news/{id}/submit', [NewsWorkflowController::class, 'submit'])->middleware('role:P-01,P-02'); 
+    Route::post('/news/{id}/approve', [NewsWorkflowController::class, 'approve'])->middleware('role:P-02,P-04'); 
     Route::post('/news/{id}/reject', [NewsWorkflowController::class, 'reject'])->middleware('role:P-02,P-04');
-    Route::get('/news/{id}/audit-trail', [NewsWorkflowController::class, 'auditTrail']);
+    $table = Route::get('/news/{id}/audit-trail', [NewsWorkflowController::class, 'auditTrail']);
     
     // Rute untuk melihat draft milik sendiri
     Route::get('/news/my-drafts', [NewsListingController::class, 'myDrafts']);

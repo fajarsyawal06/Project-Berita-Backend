@@ -165,4 +165,32 @@ class NewsListingController extends Controller
             ]
         ]);
     }
+
+    /**
+     * FR-ID-01: Daftar Berita Tersimpan (Bookmark) Milik User
+     */
+    public function bookmarkedIndex(Request $request)
+    {
+        // Gunakan whereHas untuk mencari berita yang id-nya ada di relasi savedNews milik user
+        $query = News::with([
+            'category:id,nama_kategori,warna_badge,ikon',
+            'user:id,nama_lengkap',
+            'satuanKerja:id,nama_satuan_kerja',
+            'attachments' => function($q) {
+                // Ambil gambar untuk thumbnail
+                $q->where('file_type', 'image')->select('id', 'news_id', 'file_path');
+            }
+        ])
+        ->whereHas('savedByUsers', function ($q) {
+            // savedByUsers ini adalah relasi dari sisi News (tapi karena kita mulai dari News,
+            // kita lebih baik memfilternya seperti ini)
+            $q->where('user_id', Auth::id());
+        });
+
+        // Terapkan fitur search, filter kategori, dll ke daftar bookmark!
+        $query = $this->applyFilters($query, $request);
+        $query = $this->applySorting($query, $request);
+
+        return response()->json($query->paginate(10));
+    }
 }
