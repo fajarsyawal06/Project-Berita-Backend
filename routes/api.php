@@ -8,8 +8,9 @@ use Illuminate\Support\Facades\Route;
 
 // Endpoint ini terbuka untuk umum (bisa diakses tanpa token)
 Route::post('/login', [AuthController::class, 'login']);
-// Rute FR-BR-04
+// Rute FR-BR-04 & FR-BR-07
 Route::get('/news/public', [NewsListingController::class, 'publicIndex']);
+Route::get('/news/trending', [NewsListingController::class, 'trending']);
 
 // Endpoint ini dilindungi (Hanya bisa diakses jika menyertakan Token JWT/Sanctum)
 Route::middleware('auth:sanctum')->group(function () {
@@ -34,7 +35,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Rute antrean (Khusus Editor, KSK, Admin)
     Route::get('/news/queue', [NewsListingController::class, 'queue'])->middleware('role:P-02,P-03,P-04');
+    Route::get('/news/waiting-approval-count', [NewsListingController::class, 'waitingApprovalCount'])->middleware('role:P-02,P-03,P-04');
 });
 
 // Endpoint publik (diatur proteksinya di dalam Controller)
 Route::get('/news/detail/{identifier}', [NewsController::class, 'show']);
+Route::get('/news/{id}/export-pdf', [NewsController::class, 'exportPdf']);

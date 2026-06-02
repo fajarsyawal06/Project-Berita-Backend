@@ -106,5 +106,53 @@ class NewsSeeder extends Seeder
             'mime_type'         => 'application/pdf',
             'file_size_bytes'   => 512000,
         ]);
+
+        // Generate lebih banyak data dummy agar aplikasi terlihat padat (FR-BR-07)
+        $faker = \Faker\Factory::create('id_ID');
+
+        // Buat 15 Berita PUBLISHED untuk tes widget trending (beberapa di 24 jam terakhir)
+        for ($i = 0; $i < 15; $i++) {
+            $judul = $faker->sentence(6);
+            News::create([
+                'user_id'          => 1,
+                'category_id'      => $faker->numberBetween(1, 4),
+                'satuan_kerja_id'  => 1,
+                'judul'            => $judul,
+                'slug'             => Str::slug($judul) . '-pub-' . time() . $i,
+                'what_content'     => $faker->paragraph(),
+                'who_involved'     => $faker->name() . ' dan warga.',
+                'when_occurred'    => $faker->dateTimeThisMonth()->format('l, d F Y H:i'),
+                'where_location'   => $faker->address(),
+                'why_happened'     => $faker->sentence(10),
+                'how_resolved'     => 'Sedang ditangani oleh pihak berwenang.',
+                'latitude'         => $faker->latitude(-6, -5),
+                'longitude'        => $faker->longitude(119, 120),
+                'location_address' => $faker->streetAddress(),
+                'status'           => 'PUBLISHED',
+                'views_count'      => $faker->numberBetween(10, 500),
+                'shares_count'     => $faker->numberBetween(0, 100),
+                'comments_count'   => $faker->numberBetween(0, 50),
+                'created_at'       => $faker->dateTimeBetween('-2 days', 'now'),
+            ]);
+        }
+
+        // Buat 8 Berita SENT_WAITING_VERIFICATION untuk tes antrean
+        for ($i = 0; $i < 8; $i++) {
+            $judul = $faker->sentence(6);
+            News::create([
+                'user_id'          => 1,
+                'category_id'      => $faker->numberBetween(1, 4),
+                'satuan_kerja_id'  => 1,
+                'judul'            => $judul,
+                'slug'             => Str::slug($judul) . '-wait-' . time() . $i,
+                'what_content'     => $faker->paragraph(),
+                'who_involved'     => $faker->name(),
+                'when_occurred'    => $faker->dateTimeThisMonth()->format('l, d F Y H:i'),
+                'where_location'   => $faker->address(),
+                'why_happened'     => $faker->sentence(),
+                'how_resolved'     => $faker->sentence(),
+                'status'           => 'SENT_WAITING_VERIFICATION',
+            ]);
+        }
     }
 }

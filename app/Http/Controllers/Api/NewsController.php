@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class NewsController extends Controller
 {
@@ -233,6 +234,26 @@ class NewsController extends Controller
             'data' => $news
         ]);
             
+    }
+
+    /**
+     * Export news to PDF (FR-BR-06)
+     */
+    public function exportPdf(string $id)
+    {
+        $news = News::with(['user', 'satuanKerja', 'category', 'attachments'])->findOrFail($id);
+
+        $data = [
+            'news' => $news,
+            'title' => 'Laporan Berita: ' . $news->judul,
+            'date' => now()->format('d F Y H:i:s')
+        ];
+
+        $pdf = Pdf::loadView('pdf.news-export', $data);
+
+        // Download file dengan nama [ID]_[Tanggal].pdf
+        $filename = "{$news->id}_" . now()->format('Ymd') . ".pdf";
+        return $pdf->download($filename);
     }
 
     /**

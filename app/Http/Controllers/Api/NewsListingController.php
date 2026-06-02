@@ -122,4 +122,47 @@ class NewsListingController extends Controller
 
         return response()->json($query->paginate(10));
     }
+
+    /**
+     * FR-BR-07: Mengambil top 5 berita trending harian
+     */
+    public function trending(Request $request)
+    {
+        $query = News::with([
+            'category:id,nama_kategori,warna_badge,ikon',
+            'user:id,nama_lengkap',
+            'satuanKerja:id,nama_satuan_kerja', 
+            'attachments' => function($q) {
+                // Ambil gambar saja untuk kebutuhan thumbnail
+                $q->where('file_type', 'image')->select('id', 'news_id', 'file_path');
+            }
+        ])
+        ->where('status', 'PUBLISHED')
+        ->where('created_at', '>=', now()->subHours(24))
+        ->orderByRaw('(views_count * 1) + (shares_count * 2) + (comments_count * 3) DESC')
+        ->limit(5)
+        ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berhasil mengambil berita trending',
+            'data' => $query
+        ]);
+    }
+
+    /**
+     * FR-BR-07: Menghitung jumlah antrean persetujuan (Real-time polling)
+     */
+    public function waitingApprovalCount(Request $request)
+    {
+        $count = News::where('status', 'SENT_WAITING_VERIFICATION')->count();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berhasil mengambil jumlah antrean persetujuan',
+            'data' => [
+                'count' => $count
+            ]
+        ]);
+    }
 }

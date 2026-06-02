@@ -28,6 +28,8 @@ class News extends Model
         'location_address',
         'status',
         'views_count',
+        'shares_count',
+        'comments_count',
     ];
 
     // Memastikan tipe data kembalian (casting) sesuai
@@ -35,6 +37,8 @@ class News extends Model
         'latitude' => 'decimal:8',
         'longitude' => 'decimal:8',
         'views_count' => 'integer',
+        'shares_count' => 'integer',
+        'comments_count' => 'integer',
     ];
 
     protected static function boot()
