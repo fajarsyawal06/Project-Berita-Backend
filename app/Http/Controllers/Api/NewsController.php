@@ -285,4 +285,100 @@ class NewsController extends Controller
             'message' => 'Berita berhasil dihapus'
         ], 200);
     }
+
+    /* =======================================================================
+       FITUR FR-ID-01: BOOKMARK & AUTO-SAVE DRAFT
+       ======================================================================= */
+
+    /**
+     * Menyimpan atau membatalkan simpanan berita (Bookmark)
+     */
+    public function toggleBookmark(string $id)
+    {
+        $news = News::findOrFail($id);
+        $user = Auth::user();
+
+        // Fungsi toggle() otomatis: jika belum ada akan ditambah, jika sudah ada akan dihapus
+        $toggle = $user->savedNews()->toggle($news->id);
+
+        // Jika array 'attached' tidak kosong, berarti berita baru saja disimpan
+        $isBookmarked = count($toggle['attached']) > 0;
+
+        return response()->json([
+            'status' => 'success',
+            'message' => $isBookmarked ? 'Berita berhasil disimpan ke Bookmark.' : 'Berita dihapus dari Bookmark.',
+            'is_bookmarked' => $isBookmarked
+        ], 200);
+    }
+
+    /**
+     * Membuat draft pertama kali (Hanya butuh judul)
+     */
+    public function storeDraft(Request $request)
+    {
+        // Validasi sangat longgar, hanya judul yang wajib
+        $validator = Validator::make($request->all(), [
+            'judul' => 'required|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => 'error', 'errors' => $validator->errors()], 422);
+        }
+
+        $user = Auth::user();
+
+        $news = News::create([
+            'user_id'         => $user->id,
+            'satuan_kerja_id' => $user->satuan_kerja_id,
+            'judul'           => $request->judul,
+            'slug'            => Str::slug($request->judul) . '-' . time(), // Tambahan time() agar slug tidak bentrok
+            'status'          => 'DRAFT',
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Draft awal berhasil dibuat',
+            'data' => $news
+        ], 201);
+    }
+
+    /**
+     * Auto-save untuk draft yang sudah ada
+     */
+    public function updateDraft(Request $request, string $id)
+    {
+        $user = Auth::user();
+        
+        // Pastikan draft yang diedit adalah milik user yang sedang login dan statusnya DRAFT
+        $news = News::where('user_id', $user->id)
+                    ->where('id', $id)
+                    ->where('status', 'DRAFT')
+                    ->first();
+
+        if (!$news) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Draft tidak ditemukan atau Anda tidak memiliki akses.'
+            ], 404);
+        }
+
+        // Ambil data dari request yang dikirimkan oleh Frontend (bisa parsial/sebagian)
+        $dataToUpdate = $request->only([
+            'judul', 'category_id', 'what_content', 'who_involved', 
+            'when_occurred', 'where_location', 'why_happened', 'how_resolved', 
+            'latitude', 'longitude', 'location_address'
+        ]);
+
+        if (isset($dataToUpdate['judul'])) {
+            $dataToUpdate['slug'] = Str::slug($dataToUpdate['judul']) . '-' . $news->id;
+        }
+
+        $news->update($dataToUpdate);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Draft otomatis disimpan',
+            'data' => $news
+        ], 200);
+    }
 }

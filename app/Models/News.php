@@ -95,5 +95,15 @@ class News extends Model
         return $this->hasMany(NewsStatusLog::class)->orderBy('created_at', 'desc');
     }
 
+    /* =========================================
+       RELASI MANY-TO-MANY (Bookmark Fitur)
+       ========================================= */
+
+    // Berita ini disimpan oleh siapa saja?
+    public function savedByUsers()
+    {
+        return $this->belongsToMany(User::class, 'saved_news', 'news_id', 'user_id')
+                    ->withTimestamps();
+    }
 
 }
