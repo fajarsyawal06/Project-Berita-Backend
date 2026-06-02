@@ -10,7 +10,8 @@ use Illuminate\Support\Facades\Route;
 Route::post('/login', [AuthController::class, 'login']);
 // Rute FR-BR-04 & FR-BR-07
 Route::get('/news/public', [NewsListingController::class, 'publicIndex']);
-Route::get('/news/trending', [NewsListingController::class, 'trending']);
+Route::get('/news/trending', [NewsListingController::class, 'trending']); // FR-BR-07 (Harian)
+Route::get('/trending', [\App\Http\Controllers\Api\TrendingNewsController::class, 'index']); // FR-TP-01 (Nasional/Lokal 7 Hari)
 
 // Endpoint ini dilindungi (Hanya bisa diakses jika menyertakan Token JWT/Sanctum)
 Route::middleware('auth:sanctum')->group(function () {

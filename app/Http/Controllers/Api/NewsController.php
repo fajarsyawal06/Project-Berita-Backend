@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\News;
 use App\Models\NewsAttachment;
+use App\Models\NewsDailyView;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
@@ -226,6 +227,18 @@ class NewsController extends Controller
             // 3. Increment Counter Penonton
             // Jika berita publik (PUBLISHED) diakses, naikkan jumlah penontonnya
             $news->increment('views_count');
+
+            // Tambahkan/Update jumlah viewer harian untuk keperluan rolling window 7 hari
+            NewsDailyView::updateOrCreate(
+                [
+                    'news_id' => $news->id,
+                    'view_date' => now()->toDateString(),
+                ],
+                [
+                    // This will increment views_count if it exists, or insert with value 0 if not (wait, we need DB::raw for incrementing safely in updateOrCreate, or just use increment on the instance).
+                    // Actually, since updateOrCreate returns the model instance, we can increment it after.
+                ]
+            )->increment('views_count');
         }
 
         // 4. Kirim respons Metadata Lengkap ke React

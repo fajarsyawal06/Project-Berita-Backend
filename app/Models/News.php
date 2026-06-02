@@ -60,6 +60,33 @@ class News extends Model
                 $model->kode_berita = 'NEWS-' . $year . '-' . str_pad($sequence, 3, '0', STR_PAD_LEFT);
             }
         });
+
+        // Event 'saving' berjalan saat data akan dibuat ATAU diubah
+        static::saving(function ($model) {
+            // Tarik data relasi secara manual jika ID-nya ada
+            $categoryName = $model->category_id ? \App\Models\NewsCategory::find($model->category_id)?->nama_kategori : '';
+            $userName = $model->user_id ? \App\Models\User::find($model->user_id)?->nama_lengkap : '';
+            $satuanKerjaName = $model->satuan_kerja_id ? \App\Models\SatuanKerja::find($model->satuan_kerja_id)?->nama_satuan_kerja : '';
+
+            // Gabungkan semua field penting untuk full-text search
+            $searchVectorString = implode(' ', [
+                $model->judul,
+                $model->what_content,
+                $model->who_involved,
+                $model->when_occurred,
+                $model->where_location,
+                $model->why_happened,
+                $model->how_resolved,
+                $categoryName,
+                $userName,
+                $satuanKerjaName
+            ]);
+
+            // Bersihkan tag HTML (opsional tapi disarankan) dan spasi berlebih
+            $cleanString = trim(preg_replace('/\s+/', ' ', strip_tags($searchVectorString)));
+            
+            $model->search_vector = $cleanString;
+        });
     }
 
     /* =========================================
