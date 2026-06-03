@@ -84,6 +84,9 @@ class NewsListingController extends Controller
                 $q->where('file_type', 'image')->select('id', 'news_id', 'file_path');
             }
         ])
+        ->withExists(['savedByUsers AS is_bookmarked' => function($q) {
+            $q->where('user_id', Auth::id());
+        }])
         // Logika utama FR-BR-04: Tampilkan semua kecuali Draft
         ->where('status', '!=', 'DRAFT');
 
@@ -143,6 +146,9 @@ class NewsListingController extends Controller
                 $q->where('file_type', 'image')->select('id', 'news_id', 'file_path');
             }
         ])
+        ->withExists(['savedByUsers AS is_bookmarked' => function($q) {
+            $q->where('user_id', Auth::id());
+        }])
         ->where('status', 'PUBLISHED')
         ->where('created_at', '>=', now()->subHours(24))
         ->orderByRaw('(views_count * 1) + (shares_count * 2) + (comments_count * 3) DESC')

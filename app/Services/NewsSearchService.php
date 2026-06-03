@@ -29,10 +29,11 @@ class NewsSearchService
         $booleanSearch = trim($booleanSearch);
 
         // Tambahkan skor relevansi ke dalam select
-        // Asumsi query sudah memiliki select() sebelumnya, atau akan menimpa.
-        // Sebaiknya query utama sudah memakai select('news.*') sebelum memanggil fungsi ini
-        $query->addSelect(DB::raw("MATCH(news.search_vector) AGAINST(? IN BOOLEAN MODE) AS relevance_score"))
-              ->setBindings(array_merge($query->getBindings(), [$booleanSearch]), 'select');
+        // Menggunakan selectRaw agar binding parameter lebih aman dan tidak menimpa binding lainnya
+        if (empty($query->getQuery()->columns)) {
+            $query->select('news.*');
+        }
+        $query->selectRaw("MATCH(news.search_vector) AGAINST(? IN BOOLEAN MODE) AS relevance_score", [$booleanSearch]);
 
         // Filter data yang cocok saja
         $query->whereRaw("MATCH(news.search_vector) AGAINST(? IN BOOLEAN MODE)", [$booleanSearch]);

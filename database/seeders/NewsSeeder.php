@@ -15,10 +15,10 @@ class NewsSeeder extends Seeder
     {
         // 1. Buat Kategori Berita
         $categories = [
-            ['nama_kategori' => 'Keamanan & Ketertiban', 'warna_badge' => '#EF4444', 'ikon' => 'shield'],
-            ['nama_kategori' => 'Bencana Alam', 'warna_badge' => '#F59E0B', 'ikon' => 'alert-triangle'],
-            ['nama_kategori' => 'Infrastruktur', 'warna_badge' => '#3B82F6', 'ikon' => 'building'],
-            ['nama_kategori' => 'Layanan Publik', 'warna_badge' => '#10B981', 'ikon' => 'users'],
+            ['kode_kategori' => 'KTG-001', 'nama_kategori' => 'Keamanan & Ketertiban', 'warna_badge' => '#EF4444', 'ikon' => 'shield'],
+            ['kode_kategori' => 'KTG-002', 'nama_kategori' => 'Bencana Alam', 'warna_badge' => '#F59E0B', 'ikon' => 'alert-triangle'],
+            ['kode_kategori' => 'KTG-003', 'nama_kategori' => 'Infrastruktur', 'warna_badge' => '#3B82F6', 'ikon' => 'building'],
+            ['kode_kategori' => 'KTG-004', 'nama_kategori' => 'Layanan Publik', 'warna_badge' => '#10B981', 'ikon' => 'users'],
         ];
 
         foreach ($categories as $cat) {

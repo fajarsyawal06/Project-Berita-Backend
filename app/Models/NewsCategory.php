@@ -10,6 +10,7 @@ class NewsCategory extends Model
     use HasFactory;
 
     protected $fillable = [
+        'kode_kategori',
         'nama_kategori',
         'deskripsi',
         'warna_badge',

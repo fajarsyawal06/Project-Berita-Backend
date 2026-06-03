@@ -4,7 +4,14 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\NewsController;
 use App\Http\Controllers\Api\NewsWorkflowController;
 use App\Http\Controllers\Api\NewsListingController;
+use App\Http\Controllers\Api\MasterData\SatuanKerjaController;
+use App\Http\Controllers\Api\MasterData\RoleController;
+use App\Http\Controllers\Api\MasterData\JabatanController;
+use App\Http\Controllers\Api\MasterData\NewsCategoryController;
+use App\Http\Controllers\Api\MasterData\UserController;
 use Illuminate\Support\Facades\Route;
+
+use Illuminate\Support\Facades\Artisan;
 
 // Endpoint ini terbuka untuk umum (bisa diakses tanpa token)
 Route::post('/login', [AuthController::class, 'login']);
@@ -49,6 +56,17 @@ Route::middleware('auth:sanctum')->group(function () {
     // Rute antrean (Khusus Editor, KSK, Admin)
     Route::get('/news/queue', [NewsListingController::class, 'queue'])->middleware('role:P-02,P-03,P-04');
     Route::get('/news/waiting-approval-count', [NewsListingController::class, 'waitingApprovalCount'])->middleware('role:P-02,P-03,P-04');
+
+    /* =======================================================================
+       CRUD MASTER DATA (Khusus Administrator P-04)
+       ======================================================================= */
+    Route::middleware('role:P-04')->group(function () {
+        Route::apiResource('/master-data/satuan-kerja', SatuanKerjaController::class);
+        Route::apiResource('/master-data/roles', RoleController::class);
+        Route::apiResource('/master-data/jabatan', JabatanController::class);
+        Route::apiResource('/master-data/kategori-berita', NewsCategoryController::class);
+        Route::apiResource('/master-data/pengguna', UserController::class);
+    });
 });
 
 // Endpoint publik (diatur proteksinya di dalam Controller)

@@ -11,7 +11,12 @@ return new class extends Migration
         // 1. Master Satuan Kerja
         Schema::create('satuan_kerjas', function (Blueprint $table) {
             $table->id();
+            $table->string('kode_unik')->nullable();
             $table->string('nama_satuan_kerja');
+            $table->string('provinsi_wilayah')->nullable();
+            $table->integer('level')->nullable();
+            $table->foreignId('parent_id')->nullable()->constrained('satuan_kerjas')->onDelete('set null');
+            $table->boolean('status_aktif')->default(true);
             $table->timestamps();
         });
 

@@ -27,11 +27,11 @@ class UserSeeder extends Seeder
         // 2. Buat Dummy Satuan Kerja & Jabatan
         DB::table('satuan_kerjas')->updateOrInsert(
             ['id' => 1], 
-            ['nama_satuan_kerja' => 'Pusat Jakarta']
+            ['kode_unik' => 'SAT-001', 'nama_satuan_kerja' => 'Pusat Jakarta']
         );
         DB::table('jabatans')->updateOrInsert(
             ['id' => 1], 
-            ['nama_jabatan' => 'Staf Operasional']
+            ['kode_jabatan' => 'JAB-001', 'nama_jabatan' => 'Staf Operasional']
         );
 
         // 3. Buat 5 Akun User (1 untuk setiap Role)
