@@ -122,6 +122,12 @@ class News extends Model
         return $this->hasMany(NewsStatusLog::class)->orderBy('created_at', 'desc');
     }
 
+    // 1 Berita bisa memiliki banyak komentar
+    public function comments()
+    {
+        return $this->hasMany(NewsComment::class)->orderBy('created_at', 'asc');
+    }
+
     /* =========================================
        RELASI MANY-TO-MANY (Bookmark Fitur)
        ========================================= */

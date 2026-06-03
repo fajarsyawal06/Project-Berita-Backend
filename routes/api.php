@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\MasterData\RoleController;
 use App\Http\Controllers\Api\MasterData\JabatanController;
 use App\Http\Controllers\Api\MasterData\NewsCategoryController;
 use App\Http\Controllers\Api\MasterData\UserController;
+use App\Http\Controllers\Api\AnalyticController;
 use Illuminate\Support\Facades\Route;
 
 use Illuminate\Support\Facades\Artisan;
@@ -24,6 +25,12 @@ Route::get('/trending', [\App\Http\Controllers\Api\TrendingNewsController::class
 Route::middleware('auth:sanctum')->group(function () {
     // Endpoint untuk mendapatkan data profil (validasi token frontend)
     Route::get('/me', [AuthController::class, 'me']);
+    
+    // Endpoint untuk mengupdate preferensi pengguna (seperti dashboard_layout)
+    Route::put('/user/preferences', [AuthController::class, 'updatePreferences']);
+
+    // Endpoint untuk mengambil data analitik dinamis
+    Route::get('/analytics/data', [AnalyticController::class, 'getAnalyticsData']);
 
     // Rute umum untuk user login
     Route::post('/news', [NewsController::class, 'store'])->middleware('role:P-01,P-02'); // Kontributor & Editor
@@ -72,3 +79,8 @@ Route::middleware('auth:sanctum')->group(function () {
 // Endpoint publik (diatur proteksinya di dalam Controller)
 Route::get('/news/detail/{identifier}', [NewsController::class, 'show']);
 Route::get('/news/{id}/export-pdf', [NewsController::class, 'exportPdf']);
+
+// Endpoint engagement (Share & Comments)
+Route::post('/news/{id}/share', [NewsController::class, 'share']);
+Route::get('/news/{id}/comments', [NewsController::class, 'getComments']);
+Route::post('/news/{id}/comments', [NewsController::class, 'postComment'])->middleware('auth:sanctum');

@@ -48,7 +48,8 @@ class AuthController extends Controller
                 'id' => $user->id,
                 'nama' => $user->nama_lengkap,
                 'email' => $user->email,
-                'role' => $user->role->kode_role // Mengirim 'P-01', 'P-04', dll ke React
+                'role' => $user->role->kode_role, // Mengirim 'P-01', 'P-04', dll ke React
+                'preferences' => $user->preferences
             ]
         ], 200);
     }
@@ -64,8 +65,27 @@ class AuthController extends Controller
                 'id' => $user->id,
                 'nama' => $user->nama_lengkap,
                 'email' => $user->email,
-                'role' => $user->role->kode_role
+                'role' => $user->role->kode_role,
+                'preferences' => $user->preferences
             ]
+        ], 200);
+    }
+
+    public function updatePreferences(Request $request)
+    {
+        $user = Auth::user();
+        
+        // Merge existing preferences with new ones
+        $currentPreferences = is_array($user->preferences) ? $user->preferences : [];
+        $newPreferences = $request->all();
+        
+        $user->preferences = array_merge($currentPreferences, $newPreferences);
+        $user->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Preferences updated successfully',
+            'preferences' => $user->preferences
         ], 200);
     }
 }

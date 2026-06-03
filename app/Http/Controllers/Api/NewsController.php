@@ -394,4 +394,60 @@ class NewsController extends Controller
             'data' => $news
         ], 200);
     }
+
+    /* =======================================================================
+       FITUR ENGAGEMENT: SHARE & COMMENTS
+       ======================================================================= */
+
+    public function share(string $id)
+    {
+        $news = News::findOrFail($id);
+        $news->increment('shares_count');
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Berita berhasil dibagikan',
+            'shares_count' => $news->shares_count
+        ]);
+    }
+
+    public function getComments(string $id)
+    {
+        $news = News::findOrFail($id);
+        $comments = $news->comments()->with('user:id,nama_lengkap')->latest()->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $comments
+        ]);
+    }
+
+    public function postComment(Request $request, string $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'content' => 'required|string|max:1000'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $news = News::findOrFail($id);
+        
+        $comment = $news->comments()->create([
+            'user_id' => Auth::id(),
+            'content' => $request->content
+        ]);
+
+        $news->increment('comments_count');
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Komentar berhasil ditambahkan',
+            'data' => $comment->load('user:id,nama_lengkap')
+        ], 201);
+    }
 }
