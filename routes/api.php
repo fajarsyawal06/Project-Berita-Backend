@@ -32,7 +32,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile/performance', [PerformanceController::class, 'index']);
 
     Route::get('/leaderboard', [LeaderboardController::class, 'index']);
+    Route::get('/leaderboard/satuan-kerja', [\App\Http\Controllers\Api\SatuanKerjaLeaderboardController::class, 'index']);
     Route::get('/season-winners', [SeasonWinnerController::class, 'index']);
+    Route::get('/points-ledger', [\App\Http\Controllers\Api\PointLedgerController::class, 'index']);
     
     // Endpoint untuk mengupdate preferensi pengguna (seperti dashboard_layout)
     Route::put('/user/preferences', [AuthController::class, 'updatePreferences']);

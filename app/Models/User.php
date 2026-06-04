@@ -94,6 +94,9 @@ class User extends Authenticatable
     /**
      * Relasi One-to-Many ke tabel point_histories
      */
+    /**
+     * Relasi One-to-Many ke tabel point_histories (Berperan sebagai Point Ledger)
+     */
     public function pointHistories()
     {
         return $this->hasMany(PointHistory::class);
