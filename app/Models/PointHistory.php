@@ -12,14 +12,18 @@ class PointHistory extends Model
     protected $fillable = [
         'user_id',
         'jumlah_poin',
-        'deskripsi',
+        'activity_type',
+        'reference_id',
+        'reference_type',
     ];
 
-    /**
-     * Get the user that owns the point history.
-     */
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function reference()
+    {
+        return $this->morphTo();
     }
 }

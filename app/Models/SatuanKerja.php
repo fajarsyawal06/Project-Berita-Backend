@@ -36,4 +36,10 @@ class SatuanKerja extends Model
     {
         return $this->hasMany(SatuanKerja::class, 'parent_id');
     }
+
+    // Relasi: Satu Satuan Kerja memiliki banyak Berita
+    public function news()
+    {
+        return $this->hasMany(News::class, 'satuan_kerja_id');
+    }
 }
