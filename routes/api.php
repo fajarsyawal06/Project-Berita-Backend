@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\MasterData\UserController;
 use App\Http\Controllers\Api\AnalyticController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\PerformanceController;
+use App\Http\Controllers\Api\LeaderboardController;
 
 use Illuminate\Support\Facades\Artisan;
 
@@ -28,6 +29,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
 
     Route::get('/profile/performance', [PerformanceController::class, 'index']);
+
+    Route::get('/leaderboard', [LeaderboardController::class, 'index']);
     
     // Endpoint untuk mengupdate preferensi pengguna (seperti dashboard_layout)
     Route::put('/user/preferences', [AuthController::class, 'updatePreferences']);
