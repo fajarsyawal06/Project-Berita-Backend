@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\MasterData\NewsCategoryController;
 use App\Http\Controllers\Api\MasterData\UserController;
 use App\Http\Controllers\Api\AnalyticController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\PerformanceController;
 
 use Illuminate\Support\Facades\Artisan;
 
@@ -25,6 +26,8 @@ Route::get('/trending', [\App\Http\Controllers\Api\TrendingNewsController::class
 Route::middleware('auth:sanctum')->group(function () {
     // Endpoint untuk mendapatkan data profil (validasi token frontend)
     Route::get('/me', [AuthController::class, 'me']);
+
+    Route::get('/profile/performance', [PerformanceController::class, 'index']);
     
     // Endpoint untuk mengupdate preferensi pengguna (seperti dashboard_layout)
     Route::put('/user/preferences', [AuthController::class, 'updatePreferences']);
@@ -73,6 +76,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('/master-data/jabatan', JabatanController::class);
         Route::apiResource('/master-data/kategori-berita', NewsCategoryController::class);
         Route::apiResource('/master-data/pengguna', UserController::class);
+
+   
+        
     });
 });
 
@@ -84,3 +90,4 @@ Route::get('/news/{id}/export-pdf', [NewsController::class, 'exportPdf']);
 Route::post('/news/{id}/share', [NewsController::class, 'share']);
 Route::get('/news/{id}/comments', [NewsController::class, 'getComments']);
 Route::post('/news/{id}/comments', [NewsController::class, 'postComment'])->middleware('auth:sanctum');
+
