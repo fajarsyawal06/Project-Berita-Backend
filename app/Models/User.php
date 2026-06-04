@@ -72,4 +72,22 @@ class User extends Authenticatable
         return $this->belongsToMany(News::class, 'saved_news', 'user_id', 'news_id')
                     ->withTimestamps();
     }
+
+    /**
+     * Relasi Many-to-Many ke tabel badges
+     */
+    public function badges()
+    {
+        return $this->belongsToMany(Badge::class, 'user_badge')
+                    ->withPivot('tanggal_peroleh'); // Membawa serta data tanggal peroleh dari tabel pivot
+    }
+
+    /**
+     * Relasi One-to-Many ke tabel news (Berita yang dibuat user ini)
+     */
+    public function news()
+    {
+        // Catatan: Ganti 'user_id' menjadi 'author_id' jika kolom pembuat di tabel news milikmu berbeda.
+        return $this->hasMany(News::class, 'user_id'); 
+    }
 }
