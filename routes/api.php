@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\AnalyticController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\PerformanceController;
 use App\Http\Controllers\Api\LeaderboardController;
+use App\Http\Controllers\Api\SeasonWinnerController;
 
 use Illuminate\Support\Facades\Artisan;
 
@@ -31,6 +32,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile/performance', [PerformanceController::class, 'index']);
 
     Route::get('/leaderboard', [LeaderboardController::class, 'index']);
+    Route::get('/season-winners', [SeasonWinnerController::class, 'index']);
     
     // Endpoint untuk mengupdate preferensi pengguna (seperti dashboard_layout)
     Route::put('/user/preferences', [AuthController::class, 'updatePreferences']);
