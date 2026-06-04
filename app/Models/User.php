@@ -90,4 +90,12 @@ class User extends Authenticatable
         // Catatan: Ganti 'user_id' menjadi 'author_id' jika kolom pembuat di tabel news milikmu berbeda.
         return $this->hasMany(News::class, 'user_id'); 
     }
+
+    /**
+     * Relasi One-to-Many ke tabel point_histories
+     */
+    public function pointHistories()
+    {
+        return $this->hasMany(PointHistory::class);
+    }
 }
