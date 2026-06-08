@@ -27,8 +27,8 @@ class NewsController extends Controller
         $query = News::query();
 
         // Jika status yang direquest adalah antrean verifikasi dan rolenya memiliki akses verifikasi, maka jangan filter user_id
-        // Role kode: P-02 (Verifikator), P-03 (KSK), P-04 (Admin)
-        $isVerifikator = in_array($user->role->kode_role ?? '', ['P-02', 'P-03', 'P-04']);
+        // Cek permission: news.verify (bisa diatur untuk Verifikator, KSK, Admin)
+        $isVerifikator = $user->hasPermission('news.verify');
 
         if ($status === 'SENT_WAITING_VERIFICATION' && $isVerifikator) {
             // Tampilkan semua berita yang menunggu verifikasi (tanpa memfilter user_id penulis)
@@ -233,7 +233,7 @@ class NewsController extends Controller
             // Jika user BUKAN pembuat berita ini DAN BUKAN editor/admin, tolak aksesnya!
             // (Sesuaikan logika pengecekan role 'is_editor' ini dengan desain role database Anda)
             $isMaker = ($news->user_id === $user->id);
-            $isEditor = in_array($user->role->kode_role ?? '', ['P-02', 'P-03', 'P-04']); // P-02: Verifikator, P-03: KSK, P-04: Admin
+            $isEditor = $user->hasPermission('news.verify');
             
             if (!$isMaker && !$isEditor) {
                 \Log::warning('User does not have permission', ['isMaker' => $isMaker, 'isEditor' => $isEditor]);

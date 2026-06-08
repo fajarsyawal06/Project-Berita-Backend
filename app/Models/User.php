@@ -101,4 +101,18 @@ class User extends Authenticatable
     {
         return $this->hasMany(PointHistory::class);
     }
+
+    /**
+     * Mengecek apakah user memiliki permission tertentu
+     */
+    public function hasPermission($permissionName)
+    {
+        if (!$this->role) {
+            return false;
+        }
+
+        // Asumsi relasi Role -> Permissions menggunakan nama metode 'permissions'
+        // dan tabel permissions memiliki kolom 'name'
+        return $this->role->permissions->contains('name', $permissionName);
+    }
 }

@@ -14,6 +14,7 @@ return new class extends Migration
             $table->string('nama_lengkap', 100);
             $table->string('email', 100)->unique();
             $table->string('password'); 
+            $table->string('avatar')->nullable();
             
             // Relasi (Pastikan tabel ini dieksekusi setelah tabel master di atas)
             $table->foreignId('jabatan_id')->nullable()->constrained('jabatans')->nullOnDelete();

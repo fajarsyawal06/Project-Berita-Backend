@@ -39,8 +39,8 @@ class ReportController extends Controller
         $user = Auth::user();
         $satuanKerjaId = $request->satuan_kerja_id;
 
-        // Security check: KSK (P-03) only allowed to generate for their own unit
-        if ($user && $user->role && $user->role->kode_role === 'P-03') {
+        // Security check: Jika user TIDAK memiliki izin 'reports.national', paksa ke unit kerjanya sendiri
+        if ($user && !$user->hasPermission('reports.national')) {
             if ($satuanKerjaId != $user->satuan_kerja_id && $satuanKerjaId !== null) {
                 return response()->json(['message' => 'Anda hanya dapat men-generate laporan untuk satuan kerja Anda sendiri.'], 403);
             }

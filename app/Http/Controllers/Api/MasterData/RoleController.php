@@ -11,7 +11,7 @@ class RoleController extends Controller
 {
     public function index()
     {
-        $data = Role::all();
+        $data = Role::with('permissions')->get();
         return response()->json(['success' => true, 'data' => $data]);
     }
 
@@ -31,12 +31,18 @@ class RoleController extends Controller
 
         $role = Role::create($data);
 
+        if ($request->has('permissions') && is_array($request->permissions)) {
+            $role->permissions()->sync($request->permissions);
+        }
+
+        $role->load('permissions');
+
         return response()->json(['success' => true, 'message' => 'Role berhasil ditambahkan', 'data' => $role], 201);
     }
 
     public function show($id)
     {
-        $role = Role::find($id);
+        $role = Role::with('permissions')->find($id);
         if (!$role) {
             return response()->json(['success' => false, 'message' => 'Role tidak ditemukan'], 404);
         }
@@ -60,6 +66,12 @@ class RoleController extends Controller
         }
 
         $role->update($request->all());
+
+        if ($request->has('permissions') && is_array($request->permissions)) {
+            $role->permissions()->sync($request->permissions);
+        }
+
+        $role->load('permissions');
 
         return response()->json(['success' => true, 'message' => 'Role berhasil diperbarui', 'data' => $role]);
     }

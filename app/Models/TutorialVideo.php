@@ -31,4 +31,9 @@ class TutorialVideo extends Model
     {
         return $this->hasMany(TutorialVideoComment::class);
     }
+
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class, 'role_tutorial_video');
+    }
 }

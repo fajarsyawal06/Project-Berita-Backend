@@ -23,12 +23,9 @@ class DashboardShareController extends Controller
 
         $user = $request->user();
 
-        // Ensure user has permission (P-03 or P-04) - mostly handled by middleware, but good to be safe.
-        if (!in_array($user->role->kode_role, ['P-03', 'P-04'])) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Unauthorized to share dashboard.'
-            ], 403);
+        // Ensure user has permission (dashboard.share)
+        if (!$user->hasPermission('dashboard.share')) {
+            return response()->json(['message' => 'Unauthorized. Only KSK and Admins can share dashboards.'], 403);
         }
 
         // Generate Tokenized unique string (UUIDv4 + hash signature)

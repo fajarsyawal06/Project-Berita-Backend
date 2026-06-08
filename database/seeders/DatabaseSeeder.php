@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             ReportTemplateSeeder::class,
             PointHistorySeeder::class,
             LeaderboardSeeder::class,
+            PermissionSeeder::class,
         ]);
     }
 }

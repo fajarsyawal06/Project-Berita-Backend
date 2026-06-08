@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\MasterData\RoleController;
 use App\Http\Controllers\Api\MasterData\JabatanController;
 use App\Http\Controllers\Api\MasterData\NewsCategoryController;
 use App\Http\Controllers\Api\MasterData\UserController;
+use App\Http\Controllers\Api\MasterData\PermissionController;
 use App\Http\Controllers\Api\AnalyticController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\PerformanceController;
@@ -16,6 +17,11 @@ use App\Http\Controllers\Api\LeaderboardController;
 use App\Http\Controllers\Api\SeasonWinnerController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\AdhocReportController;
+use App\Http\Controllers\Api\AdminTutorialVideoController;
+use App\Http\Controllers\Api\MasterData\AdminTutorialCategoryController;
+use App\Http\Controllers\Api\TutorialVideoUserController;
+use App\Http\Controllers\Api\AdminTutorialArticleController;
+use App\Http\Controllers\Api\TutorialArticleUserController;
 
 use Illuminate\Support\Facades\Artisan;
 
@@ -30,6 +36,7 @@ Route::get('/trending', [\App\Http\Controllers\Api\TrendingNewsController::class
 Route::middleware('auth:sanctum')->group(function () {
     // Endpoint untuk mendapatkan data profil (validasi token frontend)
     Route::get('/me', [AuthController::class, 'me']);
+    Route::post('/user/ping', [AuthController::class, 'ping']);
 
     Route::get('/profile/performance', [PerformanceController::class, 'index']);
 
@@ -55,24 +62,33 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/interaction-logs', [\App\Http\Controllers\Api\TutorialDashboardController::class, 'getInteractionLogs']);
     });
 
+    // Endpoint Daftar Video Panduan (Berdasarkan Role User)
+    Route::get('/tutorial-videos', [TutorialVideoUserController::class, 'index']);
+    Route::get('/tutorial-categories', [TutorialVideoUserController::class, 'getCategories']);
+    Route::get('/tutorial-videos/{id}', [TutorialVideoUserController::class, 'show']);
+
+    // Endpoint Daftar Artikel Panduan
+    Route::get('/tutorial-articles', [TutorialArticleUserController::class, 'index']);
+    Route::get('/tutorial-articles/{id}', [TutorialArticleUserController::class, 'show']);
+
     // Endpoint untuk mengambil data analitik dinamis
     Route::get('/analytics/data', [AnalyticController::class, 'getAnalyticsData']);
 
-    Route::get('/reports/templates', [ReportController::class, 'getTemplates'])->middleware('role:P-03,P-04');
-    Route::post('/reports/generate', [ReportController::class, 'generate'])->middleware('role:P-03,P-04');
+    Route::get('/reports/templates', [ReportController::class, 'getTemplates'])->middleware('permission:reports.view');
+    Route::post('/reports/generate', [ReportController::class, 'generate'])->middleware('permission:reports.generate');
 
     // Endpoint Laporan Ad-hoc
-    Route::get('/reports/adhoc/columns', [AdhocReportController::class, 'getColumns'])->middleware('role:P-04');
-    Route::post('/reports/adhoc/preview', [AdhocReportController::class, 'preview'])->middleware('role:P-04');
-    Route::post('/reports/adhoc/export', [AdhocReportController::class, 'export'])->middleware('role:P-04');
+    Route::get('/reports/adhoc/columns', [AdhocReportController::class, 'getColumns'])->middleware('permission:reports.adhoc');
+    Route::post('/reports/adhoc/preview', [AdhocReportController::class, 'preview'])->middleware('permission:reports.adhoc');
+    Route::post('/reports/adhoc/export', [AdhocReportController::class, 'export'])->middleware('permission:reports.adhoc');
 
     // Endpoint Master Data Read-Only untuk kebutuhan form/dropdown umum
     Route::get('/satuan-kerja/list', [SatuanKerjaController::class, 'index']);
 
     // Rute umum untuk user login
-    Route::post('/news', [NewsController::class, 'store'])->middleware('role:P-01,P-02'); // Kontributor & Editor
+    Route::post('/news', [NewsController::class, 'store'])->middleware('permission:news.create'); // Kontributor & Editor
     Route::get('/news', [NewsController::class, 'index']); 
-    Route::delete('/news/{id}', [NewsController::class, 'destroy'])->middleware('role:P-01,P-02');
+    Route::delete('/news/{id}', [NewsController::class, 'destroy'])->middleware('permission:news.create');
 
     /* =======================================================================
        👇 RUTE BARU KHUSUS FITUR FR-ID-01 (BOOKMARK & DRAFT AUTO-SAVE) 👇
@@ -83,36 +99,43 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/news/bookmarked', [NewsListingController::class, 'bookmarkedIndex']); // Mengambil list berita yang di-bookmark oleh user login
 
     // PILAR 2: AUTO-SAVE DRAFT (Hanya Kontributor & Editor yang bisa bikin draft)
-    Route::post('/news/draft', [NewsController::class, 'storeDraft'])->middleware('role:P-01,P-02'); // Buat draft pertama kali
-    Route::put('/news/draft/{id}', [NewsController::class, 'updateDraft'])->middleware('role:P-01,P-02'); // Auto-save update draft (Debounce)
+    Route::post('/news/draft', [NewsController::class, 'storeDraft'])->middleware('permission:news.create'); // Buat draft pertama kali
+    Route::put('/news/draft/{id}', [NewsController::class, 'updateDraft'])->middleware('permission:news.create'); // Auto-save update draft (Debounce)
 
     /* ======================================================================= */
 
     // Rute khusus workflow (Editor/Admin)
-    Route::post('/news/{id}/submit', [NewsWorkflowController::class, 'submit'])->middleware('role:P-01,P-02'); 
-    Route::post('/news/{id}/approve', [NewsWorkflowController::class, 'approve'])->middleware('role:P-02,P-04'); 
-    Route::post('/news/{id}/reject', [NewsWorkflowController::class, 'reject'])->middleware('role:P-02,P-04');
+    Route::post('/news/{id}/submit', [NewsWorkflowController::class, 'submit'])->middleware('permission:news.create'); 
+    Route::post('/news/{id}/approve', [NewsWorkflowController::class, 'approve'])->middleware('permission:news.verify'); 
+    Route::post('/news/{id}/reject', [NewsWorkflowController::class, 'reject'])->middleware('permission:news.verify');
     $table = Route::get('/news/{id}/audit-trail', [NewsWorkflowController::class, 'auditTrail']);
     
     // Rute untuk melihat draft milik sendiri
     Route::get('/news/my-drafts', [NewsListingController::class, 'myDrafts']);
 
     // Rute antrean (Khusus Editor, KSK, Admin)
-    Route::get('/news/queue', [NewsListingController::class, 'queue'])->middleware('role:P-02,P-03,P-04');
-    Route::get('/news/waiting-approval-count', [NewsListingController::class, 'waitingApprovalCount'])->middleware('role:P-02,P-03,P-04');
+    Route::get('/news/queue', [NewsListingController::class, 'queue'])->middleware('permission:news.queue.view');
+    Route::get('/news/waiting-approval-count', [NewsListingController::class, 'waitingApprovalCount'])->middleware('permission:news.queue.view');
 
     /* =======================================================================
-       CRUD MASTER DATA (Khusus Administrator P-04)
+       CRUD MASTER DATA (Khusus Administrator atau yang memiliki master_data.manage)
        ======================================================================= */
-    Route::middleware('role:P-04')->group(function () {
+    Route::middleware('permission:master_data.manage')->group(function () {
         Route::apiResource('/master-data/satuan-kerja', SatuanKerjaController::class);
+        Route::get('/master-data/permissions', [PermissionController::class, 'index']);
         Route::apiResource('/master-data/roles', RoleController::class);
         Route::apiResource('/master-data/jabatan', JabatanController::class);
         Route::apiResource('/master-data/kategori-berita', NewsCategoryController::class);
         Route::apiResource('/master-data/pengguna', UserController::class);
 
-   
-        
+        // CRUD Video Panduan (Khusus Administrator)
+        Route::get('/admin/tutorial-categories', [AdminTutorialVideoController::class, 'getCategories']);
+        Route::apiResource('/admin/tutorial-videos', AdminTutorialVideoController::class);
+        Route::apiResource('/master-data/kategori-video-panduan', AdminTutorialCategoryController::class);
+
+        // CRUD Artikel Panduan (Khusus Administrator)
+        Route::apiResource('/admin/tutorial-articles', AdminTutorialArticleController::class);
+
     });
 });
 

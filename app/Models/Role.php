@@ -21,4 +21,16 @@ class Role extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    // Relasi: Satu Role bisa memiliki akses ke banyak Tutorial Video (Many-to-Many)
+    public function tutorialVideos()
+    {
+        return $this->belongsToMany(TutorialVideo::class, 'role_tutorial_video');
+    }
+
+    // Relasi: Satu Role bisa memiliki banyak Permission (Many-to-Many)
+    public function permissions()
+    {
+        return $this->belongsToMany(Permission::class, 'permission_role');
+    }
 }

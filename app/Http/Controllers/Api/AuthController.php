@@ -26,7 +26,7 @@ class AuthController extends Controller
         }
 
         // 3. Ambil data User beserta relasi Role-nya
-        $user = User::with('role')->where('email', $request->email)->first();
+        $user = User::with('role.permissions')->where('email', $request->email)->first();
 
         // 4. Cek apakah akun dinonaktifkan
         if (!$user->status_aktif) {
@@ -48,7 +48,8 @@ class AuthController extends Controller
                 'id' => $user->id,
                 'nama' => $user->nama_lengkap,
                 'email' => $user->email,
-                'role' => $user->role->kode_role, // Mengirim 'P-01', 'P-04', dll ke React
+                'role' => $user->role ? $user->role->kode_role : null, // Mengirim 'P-01', 'P-04', dll ke React
+                'permissions' => $user->role && $user->role->permissions ? $user->role->permissions->pluck('name') : [],
                 'preferences' => $user->preferences
             ]
         ], 200);
@@ -57,7 +58,7 @@ class AuthController extends Controller
     public function me(Request $request)
     {
         $user = Auth::user();
-        $user->load('role');
+        $user->load('role.permissions');
 
         return response()->json([
             'status' => 'success',
@@ -65,7 +66,8 @@ class AuthController extends Controller
                 'id' => $user->id,
                 'nama' => $user->nama_lengkap,
                 'email' => $user->email,
-                'role' => $user->role->kode_role,
+                'role' => $user->role ? $user->role->kode_role : null,
+                'permissions' => $user->role && $user->role->permissions ? $user->role->permissions->pluck('name') : [],
                 'preferences' => $user->preferences
             ]
         ], 200);
@@ -86,6 +88,32 @@ class AuthController extends Controller
             'status' => 'success',
             'message' => 'Preferences updated successfully',
             'preferences' => $user->preferences
+        ], 200);
+    }
+
+    public function ping(Request $request)
+    {
+        $user = Auth::user();
+        
+        // Cek jika ada aktivitas sebelumnya
+        if ($user->last_active_at) {
+            $lastActive = \Carbon\Carbon::parse($user->last_active_at);
+            $now = \Carbon\Carbon::now();
+            
+            $diffInMinutes = $lastActive->diffInMinutes($now);
+            
+            // Jika rentang waktu wajar (misal kurang dari 5 menit), tambahkan ke total online
+            if ($diffInMinutes > 0 && $diffInMinutes <= 5) {
+                $user->total_online_minutes = ($user->total_online_minutes ?? 0) + $diffInMinutes;
+            }
+        }
+        
+        $user->last_active_at = \Carbon\Carbon::now();
+        $user->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Ping recorded'
         ], 200);
     }
 }

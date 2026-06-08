@@ -16,5 +16,13 @@ class TutorialCategory extends Model
         'urutan_tampilan'
     ];
 
-    // Nanti ditambahkan relasi ke tabel Video/Artikel Panduan jika sudah dibuat
+    public function videos()
+    {
+        return $this->hasMany(TutorialVideo::class, 'tutorial_category_id');
+    }
+
+    public function articles()
+    {
+        return $this->hasMany(TutorialArticle::class, 'tutorial_category_id');
+    }
 }
