@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\PerformanceController;
 use App\Http\Controllers\Api\LeaderboardController;
 use App\Http\Controllers\Api\SeasonWinnerController;
+use App\Http\Controllers\Api\ReportController;
+use App\Http\Controllers\Api\AdhocReportController;
 
 use Illuminate\Support\Facades\Artisan;
 
@@ -39,8 +41,33 @@ Route::middleware('auth:sanctum')->group(function () {
     // Endpoint untuk mengupdate preferensi pengguna (seperti dashboard_layout)
     Route::put('/user/preferences', [AuthController::class, 'updatePreferences']);
 
+    // Endpoint untuk share dashboard
+    Route::post('/dashboard/share', [\App\Http\Controllers\Api\DashboardShareController::class, 'share']);
+    Route::get('/dashboard/shared/{token}', [\App\Http\Controllers\Api\DashboardShareController::class, 'getSharedDashboard']);
+
+    // Endpoint Tutorial Dashboard (FR-PM-01)
+    Route::prefix('tutorial-dashboard')->group(function () {
+        Route::get('/kpi', [\App\Http\Controllers\Api\TutorialDashboardController::class, 'getKpiSummary']);
+        Route::get('/top-videos', [\App\Http\Controllers\Api\TutorialDashboardController::class, 'getTopVideos']);
+        Route::get('/latest', [\App\Http\Controllers\Api\TutorialDashboardController::class, 'getLatestVideo']);
+        Route::get('/chart-data', [\App\Http\Controllers\Api\TutorialDashboardController::class, 'getChartData']);
+        Route::get('/comments', [\App\Http\Controllers\Api\TutorialDashboardController::class, 'getComments']);
+        Route::get('/interaction-logs', [\App\Http\Controllers\Api\TutorialDashboardController::class, 'getInteractionLogs']);
+    });
+
     // Endpoint untuk mengambil data analitik dinamis
     Route::get('/analytics/data', [AnalyticController::class, 'getAnalyticsData']);
+
+    Route::get('/reports/templates', [ReportController::class, 'getTemplates'])->middleware('role:P-03,P-04');
+    Route::post('/reports/generate', [ReportController::class, 'generate'])->middleware('role:P-03,P-04');
+
+    // Endpoint Laporan Ad-hoc
+    Route::get('/reports/adhoc/columns', [AdhocReportController::class, 'getColumns'])->middleware('role:P-04');
+    Route::post('/reports/adhoc/preview', [AdhocReportController::class, 'preview'])->middleware('role:P-04');
+    Route::post('/reports/adhoc/export', [AdhocReportController::class, 'export'])->middleware('role:P-04');
+
+    // Endpoint Master Data Read-Only untuk kebutuhan form/dropdown umum
+    Route::get('/satuan-kerja/list', [SatuanKerjaController::class, 'index']);
 
     // Rute umum untuk user login
     Route::post('/news', [NewsController::class, 'store'])->middleware('role:P-01,P-02'); // Kontributor & Editor

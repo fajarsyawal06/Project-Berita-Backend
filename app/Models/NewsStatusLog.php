@@ -36,7 +36,7 @@ class NewsStatusLog extends Model
         if ($this->old_status === 'SENT_WAITING_VERIFICATION' && $this->new_status === 'APPROVED') {
             return 'Persetujuan (Approve)';
         }
-        if ($this->old_status === 'SENT_WAITING_VERIFICATION' && $this->new_status === 'DRAFT') {
+        if ($this->old_status === 'SENT_WAITING_VERIFICATION' && ($this->new_status === 'DRAFT' || $this->new_status === 'REJECTED')) {
             return 'Penolakan (Reject)';
         }
         return 'Perubahan Status menjadi ' . $this->new_status;

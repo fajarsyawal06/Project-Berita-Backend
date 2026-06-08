@@ -87,8 +87,8 @@ class NewsListingController extends Controller
         ->withExists(['savedByUsers AS is_bookmarked' => function($q) {
             $q->where('user_id', Auth::id());
         }])
-        // Logika utama FR-BR-04: Tampilkan semua kecuali Draft
-        ->where('status', '!=', 'DRAFT');
+        // Logika utama FR-BR-04: Tampilkan hanya yang Published
+        ->where('status', 'PUBLISHED');
 
         $query = $this->applyFilters($query, $request);
         $query = $this->applySorting($query, $request);
@@ -123,7 +123,7 @@ class NewsListingController extends Controller
      */
     public function queue(Request $request)
     {
-        $query = News::with(['category', 'user:id,nama_lengkap', 'attachments'])
+        $query = News::with(['category', 'user:id,nama_lengkap', 'satuanKerja:id,nama_satuan_kerja', 'attachments'])
                      ->where('status', 'SENT_WAITING_VERIFICATION');
 
         $query = $this->applyFilters($query, $request);

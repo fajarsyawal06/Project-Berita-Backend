@@ -61,7 +61,9 @@ class LeaderboardController extends Controller
                         'is_top_three' => $index < 3, 
                         'highlight_type' => $this->getHighlightType($index)
                     ];
-                });
+                })
+                ->values()
+                ->toArray();
         });
 
         return response()->json([

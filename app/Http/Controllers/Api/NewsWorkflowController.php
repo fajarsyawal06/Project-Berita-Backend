@@ -113,7 +113,7 @@ class NewsWorkflowController extends Controller
                 'news_id'    => $news->id,
                 'user_id'    => Auth::id(),
                 'old_status' => $oldStatus,
-                'new_status' => $news->status,
+                'new_status' => 'REJECTED',
                 'reason'     => $request->reason // Alasan dari inputan Editor di Frontend
             ]);
 

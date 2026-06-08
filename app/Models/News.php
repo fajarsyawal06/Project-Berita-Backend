@@ -16,6 +16,7 @@ class News extends Model
         'category_id',
         'satuan_kerja_id',
         'judul',
+        'thumbnail',
         'slug',
         'what_content',
         'who_involved',

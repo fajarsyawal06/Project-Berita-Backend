@@ -80,6 +80,7 @@ class NewsController extends Controller
             'longitude'        => 'nullable|numeric',
             'location_address' => 'nullable|string',
             
+            'thumbnail'     => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             // Validasi file lampiran (maksimal 10MB per file)
             'attachments'   => 'nullable|array',
             'attachments.*' => 'file|mimes:jpg,jpeg,png,mp4,pdf,docx,xlsx,mp3,wav|max:10240'
@@ -102,12 +103,18 @@ class NewsController extends Controller
             // Dapatkan user yang sedang login dari token Sanctum
             $user = Auth::user();
 
+            $thumbnailPath = null;
+            if ($request->hasFile('thumbnail')) {
+                $thumbnailPath = $request->file('thumbnail')->store('news_thumbnails', 'public');
+            }
+
             // 3. Simpan Teks Berita ke Tabel `news`
             $news = News::create([
                 'user_id'          => $user->id,
                 'category_id'      => $request->category_id,
                 'satuan_kerja_id'  => $user->satuan_kerja_id, // Mengambil otomatis dari profil user
                 'judul'            => $request->judul,
+                'thumbnail'        => $thumbnailPath,
                 'slug'             => Str::slug($request->judul),
                 'what_content'     => $request->what_content,
                 'who_involved'     => $request->who_involved,
@@ -119,6 +126,15 @@ class NewsController extends Controller
                 'longitude'        => $request->longitude,
                 'location_address' => $request->location_address,
                 'status'           => $isSubmit ? 'SENT_WAITING_VERIFICATION' : 'DRAFT',
+            ]);
+
+            // Catat log pembuatan berita
+            \App\Models\NewsStatusLog::create([
+                'news_id'    => $news->id,
+                'user_id'    => $user->id,
+                'old_status' => null,
+                'new_status' => $news->status,
+                'reason'     => $isSubmit ? 'Berita langsung dikirim untuk proses verifikasi oleh penulis.' : 'Draft berita berhasil dibuat.'
             ]);
 
             // 4. Proses File Lampiran (Jika Ada)
@@ -348,6 +364,14 @@ class NewsController extends Controller
             'status'          => 'DRAFT',
         ]);
 
+        \App\Models\NewsStatusLog::create([
+            'news_id'    => $news->id,
+            'user_id'    => $user->id,
+            'old_status' => null,
+            'new_status' => 'DRAFT',
+            'reason'     => 'Draft berita awal berhasil dibuat.'
+        ]);
+
         return response()->json([
             'status' => 'success',
             'message' => 'Draft awal berhasil dibuat',
@@ -382,16 +406,46 @@ class NewsController extends Controller
             'latitude', 'longitude', 'location_address'
         ]);
 
+        if ($request->hasFile('thumbnail')) {
+            // Hapus thumbnail lama jika ada
+            if ($news->thumbnail) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($news->thumbnail);
+            }
+            $dataToUpdate['thumbnail'] = $request->file('thumbnail')->store('news_thumbnails', 'public');
+        }
+
         if (isset($dataToUpdate['judul'])) {
             $dataToUpdate['slug'] = Str::slug($dataToUpdate['judul']) . '-' . $news->id;
         }
 
         $news->update($dataToUpdate);
 
+        // Proses File Lampiran Baru (Jika Ada)
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $path = $file->store('news_attachments', 'public');
+
+                $mime = $file->getClientMimeType();
+                $fileType = 'document';
+                if (str_starts_with($mime, 'image/')) $fileType = 'image';
+                elseif (str_starts_with($mime, 'video/')) $fileType = 'video';
+                elseif (str_starts_with($mime, 'audio/')) $fileType = 'voice_note';
+
+                NewsAttachment::create([
+                    'news_id'           => $news->id,
+                    'file_type'         => $fileType,
+                    'file_path'         => $path,
+                    'original_filename' => $file->getClientOriginalName(),
+                    'mime_type'         => $mime,
+                    'file_size_bytes'   => $file->getSize(),
+                ]);
+            }
+        }
+
         return response()->json([
             'status' => 'success',
             'message' => 'Draft otomatis disimpan',
-            'data' => $news
+            'data' => $news->load('attachments')
         ], 200);
     }
 

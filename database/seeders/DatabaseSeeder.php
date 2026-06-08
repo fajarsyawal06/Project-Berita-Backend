@@ -14,6 +14,11 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             NewsSeeder::class,
             NewsDailyViewSeeder::class,
+            SeasonWinnerSeeder::class,
+            AnalyticsSeeder::class,
+            ReportTemplateSeeder::class,
+            PointHistorySeeder::class,
+            LeaderboardSeeder::class,
         ]);
     }
 }
