@@ -47,10 +47,17 @@ class AuthController extends Controller
             'user' => [
                 'id' => $user->id,
                 'nama' => $user->nama_lengkap,
+                'nama_lengkap' => $user->nama_lengkap,
                 'email' => $user->email,
+                'avatar' => $user->avatar,
                 'role' => $user->role ? $user->role->kode_role : null, // Mengirim 'P-01', 'P-04', dll ke React
+                'roles' => $user->role ? [['name' => $user->role->nama_role]] : [],
                 'permissions' => $user->role && $user->role->permissions ? $user->role->permissions->pluck('name') : [],
-                'preferences' => $user->preferences
+                'preferences' => $user->preferences,
+                'satuan_kerja' => $user->satuanKerja ? [
+                    'id' => $user->satuanKerja->id,
+                    'nama_satker' => $user->satuanKerja->nama_satker
+                ] : null
             ]
         ], 200);
     }
@@ -65,10 +72,17 @@ class AuthController extends Controller
             'user' => [
                 'id' => $user->id,
                 'nama' => $user->nama_lengkap,
+                'nama_lengkap' => $user->nama_lengkap,
                 'email' => $user->email,
+                'avatar' => $user->avatar,
                 'role' => $user->role ? $user->role->kode_role : null,
+                'roles' => $user->role ? [['name' => $user->role->nama_role]] : [],
                 'permissions' => $user->role && $user->role->permissions ? $user->role->permissions->pluck('name') : [],
-                'preferences' => $user->preferences
+                'preferences' => $user->preferences,
+                'satuan_kerja' => $user->satuanKerja ? [
+                    'id' => $user->satuanKerja->id,
+                    'nama_satker' => $user->satuanKerja->nama_satker
+                ] : null
             ]
         ], 200);
     }

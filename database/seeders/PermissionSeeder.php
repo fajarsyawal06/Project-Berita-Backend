@@ -32,6 +32,9 @@ class PermissionSeeder extends Seeder
             // Master Data & Sistem
             ['name' => 'master_data.manage', 'module' => 'Sistem', 'description' => 'Mengelola Master Data'],
             ['name' => 'tutorial_data.manage', 'module' => 'Sistem', 'description' => 'Mengelola Data Tutorial'],
+
+            // Informasi Tersimpan & Bookmark
+            ['name' => 'news.bookmark', 'module' => 'Berita', 'description' => 'Menyimpan berita (Bookmark)'],
         ];
 
         foreach ($permissions as $permissionData) {
@@ -43,10 +46,10 @@ class PermissionSeeder extends Seeder
 
         // Attach permissions to roles
         $rolePermissions = [
-            'P-01' => ['news.create'],
-            'P-02' => ['news.create', 'news.verify', 'news.queue.view'],
-            'P-03' => ['news.queue.view', 'reports.view', 'reports.generate', 'dashboard.share'],
-            'P-04' => ['news.verify', 'news.queue.view', 'news.force_publish', 'reports.view', 'reports.generate', 'reports.adhoc', 'reports.national', 'master_data.manage', 'tutorial_data.manage', 'dashboard.view', 'dashboard.share'],
+            'P-01' => ['news.create', 'news.bookmark', 'reports.view'],
+            'P-02' => ['news.verify', 'news.queue.view', 'reports.view'],
+            'P-03' => ['news.queue.view', 'reports.view', 'reports.generate', 'reports.adhoc', 'dashboard.share'],
+            'P-04' => ['news.verify', 'news.queue.view', 'news.force_publish', 'news.bookmark', 'reports.view', 'reports.generate', 'reports.adhoc', 'reports.national', 'master_data.manage', 'tutorial_data.manage', 'dashboard.view', 'dashboard.share'],
             'P-05' => []
         ];
 

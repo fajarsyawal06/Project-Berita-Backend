@@ -32,6 +32,24 @@ Route::get('/news/public', [NewsListingController::class, 'publicIndex']);
 Route::get('/news/trending', [NewsListingController::class, 'trending']); // FR-BR-07 (Harian)
 Route::get('/trending', [\App\Http\Controllers\Api\TrendingNewsController::class, 'index']); // FR-TP-01 (Nasional/Lokal 7 Hari)
 
+// Endpoint Publik untuk Viewer Umum (Guest)
+Route::get('/leaderboard', [LeaderboardController::class, 'index']);
+Route::get('/leaderboard/satuan-kerja', [\App\Http\Controllers\Api\SatuanKerjaLeaderboardController::class, 'index']);
+Route::get('/season-winners', [SeasonWinnerController::class, 'index']);
+
+// Endpoint Master Data Read-Only (Public Dropdown)
+Route::get('/satuan-kerja/list', [SatuanKerjaController::class, 'index']);
+Route::get('/roles/list', [RoleController::class, 'index']);
+
+// Endpoint Daftar Video Panduan (Berdasarkan Role User)
+Route::get('/tutorial-videos', [TutorialVideoUserController::class, 'index']);
+Route::get('/tutorial-categories', [TutorialVideoUserController::class, 'getCategories']);
+Route::get('/tutorial-videos/{id}', [TutorialVideoUserController::class, 'show']);
+
+// Endpoint Daftar Artikel Panduan
+Route::get('/tutorial-articles', [TutorialArticleUserController::class, 'index']);
+Route::get('/tutorial-articles/{id}', [TutorialArticleUserController::class, 'show']);
+
 // Endpoint ini dilindungi (Hanya bisa diakses jika menyertakan Token JWT/Sanctum)
 Route::middleware('auth:sanctum')->group(function () {
     // Endpoint untuk mendapatkan data profil (validasi token frontend)
@@ -39,12 +57,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/user/ping', [AuthController::class, 'ping']);
 
     Route::get('/profile/performance', [PerformanceController::class, 'index']);
-
-    Route::get('/leaderboard', [LeaderboardController::class, 'index']);
-    Route::get('/leaderboard/satuan-kerja', [\App\Http\Controllers\Api\SatuanKerjaLeaderboardController::class, 'index']);
-    Route::get('/season-winners', [SeasonWinnerController::class, 'index']);
     Route::get('/points-ledger', [\App\Http\Controllers\Api\PointLedgerController::class, 'index']);
-    
+
     // Endpoint untuk mengupdate preferensi pengguna (seperti dashboard_layout)
     Route::put('/user/preferences', [AuthController::class, 'updatePreferences']);
 
@@ -82,21 +96,20 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/reports/adhoc/preview', [AdhocReportController::class, 'preview'])->middleware('permission:reports.adhoc');
     Route::post('/reports/adhoc/export', [AdhocReportController::class, 'export'])->middleware('permission:reports.adhoc');
 
-    // Endpoint Master Data Read-Only untuk kebutuhan form/dropdown umum
-    Route::get('/satuan-kerja/list', [SatuanKerjaController::class, 'index']);
+
 
     // Rute umum untuk user login
     Route::post('/news', [NewsController::class, 'store'])->middleware('permission:news.create'); // Kontributor & Editor
-    Route::get('/news', [NewsController::class, 'index']); 
+    Route::get('/news', [NewsController::class, 'index']);
     Route::delete('/news/{id}', [NewsController::class, 'destroy'])->middleware('permission:news.create');
 
     /* =======================================================================
        👇 RUTE BARU KHUSUS FITUR FR-ID-01 (BOOKMARK & DRAFT AUTO-SAVE) 👇
        ======================================================================= */
-    
+
     // PILAR 1: BOOKMARK (Berita Tersimpan)
-    Route::post('/news/{id}/bookmark', [NewsController::class, 'toggleBookmark']); // Menyimpan / Batal Menyimpan Berita (Toggle)
-    Route::get('/news/bookmarked', [NewsListingController::class, 'bookmarkedIndex']); // Mengambil list berita yang di-bookmark oleh user login
+    Route::post('/news/{id}/bookmark', [NewsController::class, 'toggleBookmark'])->middleware('permission:news.bookmark'); // Menyimpan / Batal Menyimpan Berita (Toggle)
+    Route::get('/news/bookmarked', [NewsListingController::class, 'bookmarkedIndex'])->middleware('permission:news.bookmark'); // Mengambil list berita yang di-bookmark oleh user login
 
     // PILAR 2: AUTO-SAVE DRAFT (Hanya Kontributor & Editor yang bisa bikin draft)
     Route::post('/news/draft', [NewsController::class, 'storeDraft'])->middleware('permission:news.create'); // Buat draft pertama kali
@@ -105,11 +118,11 @@ Route::middleware('auth:sanctum')->group(function () {
     /* ======================================================================= */
 
     // Rute khusus workflow (Editor/Admin)
-    Route::post('/news/{id}/submit', [NewsWorkflowController::class, 'submit'])->middleware('permission:news.create'); 
-    Route::post('/news/{id}/approve', [NewsWorkflowController::class, 'approve'])->middleware('permission:news.verify'); 
+    Route::post('/news/{id}/submit', [NewsWorkflowController::class, 'submit'])->middleware('permission:news.create');
+    Route::post('/news/{id}/approve', [NewsWorkflowController::class, 'approve'])->middleware('permission:news.verify');
     Route::post('/news/{id}/reject', [NewsWorkflowController::class, 'reject'])->middleware('permission:news.verify');
     $table = Route::get('/news/{id}/audit-trail', [NewsWorkflowController::class, 'auditTrail']);
-    
+
     // Rute untuk melihat draft milik sendiri
     Route::get('/news/my-drafts', [NewsListingController::class, 'myDrafts']);
 
@@ -135,7 +148,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // CRUD Artikel Panduan (Khusus Administrator)
         Route::apiResource('/admin/tutorial-articles', AdminTutorialArticleController::class);
-
     });
 });
 
@@ -147,4 +159,3 @@ Route::get('/news/{id}/export-pdf', [NewsController::class, 'exportPdf']);
 Route::post('/news/{id}/share', [NewsController::class, 'share']);
 Route::get('/news/{id}/comments', [NewsController::class, 'getComments']);
 Route::post('/news/{id}/comments', [NewsController::class, 'postComment'])->middleware('auth:sanctum');
-

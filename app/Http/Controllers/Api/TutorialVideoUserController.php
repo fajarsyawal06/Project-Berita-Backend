@@ -14,8 +14,8 @@ class TutorialVideoUserController extends Controller
      */
     public function index(Request $request)
     {
-        $user = auth()->user();
-        $roleId = $user->role_id;
+        $user = auth('sanctum')->user();
+        $roleId = $user ? $user->role_id : 'P-05';
 
         $query = TutorialVideo::whereHas('roles', function ($q) use ($roleId) {
             $q->where('role_id', $roleId);
@@ -44,8 +44,8 @@ class TutorialVideoUserController extends Controller
      */
     public function show($id)
     {
-        $user = auth()->user();
-        $roleId = $user->role_id;
+        $user = auth('sanctum')->user();
+        $roleId = $user ? $user->role_id : 'P-05';
 
         $video = TutorialVideo::whereHas('roles', function ($q) use ($roleId) {
             $q->where('role_id', $roleId);
