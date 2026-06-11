@@ -40,16 +40,9 @@ class AnalyticController extends Controller
 
             $data = $query->groupBy('name')->orderBy(DB::raw('MIN(created_at)'))->get();
 
-            // Jika database masih kosong (fallback data dummy agar UI terlihat bagus)
+            // Tidak perlu memberikan data dummy jika database kosong, biarkan UI frontend menangani status kosong
             if ($data->isEmpty()) {
-                 $data = collect([
-                    ['name' => 'Jan', 'value' => 400],
-                    ['name' => 'Feb', 'value' => 300],
-                    ['name' => 'Mar', 'value' => 550],
-                    ['name' => 'Apr', 'value' => 450],
-                    ['name' => 'Mei', 'value' => 600],
-                    ['name' => 'Jun', 'value' => 700],
-                 ]);
+                $data = collect([]);
             }
 
             return response()->json([
@@ -59,19 +52,14 @@ class AnalyticController extends Controller
         }
         
         if ($source === 'v_news_count_by_category') {
-            $data = $query->join('master_categories', 'news.category_id', '=', 'master_categories.id')
-                          ->select('master_categories.nama_kategori as name', DB::raw('COUNT(news.id) as value'))
-                          ->groupBy('master_categories.nama_kategori')
+            $data = $query->join('news_categories', 'news.category_id', '=', 'news_categories.id')
+                          ->select('news_categories.nama_kategori as name', DB::raw('COUNT(news.id) as value'))
+                          ->groupBy('news_categories.nama_kategori')
                           ->get();
                           
-            // Jika database masih kosong (fallback)
+            // Tidak perlu fallback data dummy
             if ($data->isEmpty()) {
-                 $data = collect([
-                    ['name' => 'Politik', 'value' => 120],
-                    ['name' => 'Ekonomi', 'value' => 200],
-                    ['name' => 'Hiburan', 'value' => 150],
-                    ['name' => 'Olahraga', 'value' => 80],
-                 ]);
+                $data = collect([]);
             }
 
             return response()->json([
@@ -80,12 +68,19 @@ class AnalyticController extends Controller
             ]);
         }
 
-        // Default jika source tidak dikenali atau untuk scorecard
+        // Scorecard (Summary Metrics)
+        $totalNews = News::count();
+        $lastMonthCount = News::where('created_at', '>=', Carbon::now()->subMonth())->count();
+        
+        // Asumsi pertumbuhan dihitung sederhana sebagai persentase dari total
+        // Pada aplikasi nyata, akan dihitung dari perbandingan bulan ke bulan
+        $growth = $lastMonthCount > 0 ? '+' . round(($lastMonthCount / max(1, $totalNews - $lastMonthCount)) * 100) . '%' : '0%';
+
         return response()->json([
             'status' => 'success',
             'data' => [
-                'total' => News::count() > 0 ? News::count() : rand(1000, 50000),
-                'growth' => '+' . rand(1, 20) . '%'
+                'total' => $totalNews,
+                'growth' => $growth
             ]
         ]);
     }

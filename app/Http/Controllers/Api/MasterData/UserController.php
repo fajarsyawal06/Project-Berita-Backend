@@ -74,8 +74,18 @@ class UserController extends Controller
             return response()->json(['success' => false, 'message' => 'Pengguna tidak ditemukan'], 404);
         }
         
+        $durasi_menit = $user->activities()
+            ->whereNotNull('session_end')
+            ->get()
+            ->sum(function($activity) {
+                return $activity->session_start->diffInMinutes($activity->session_end);
+            });
+
+        $last_activity = $user->activities()->latest('session_start')->first();
+
         $user->total_poin = $user->pointHistories()->sum('jumlah_poin');
-        $user->durasi_online_menit = $user->total_online_minutes ?? 0;
+        $user->durasi_online_menit = $durasi_menit;
+        $user->last_active_at = $last_activity ? ($last_activity->session_end ?? $last_activity->session_start) : $user->last_login_at;
         
         return response()->json(['success' => true, 'data' => $user]);
     }
@@ -127,6 +137,10 @@ class UserController extends Controller
         $user = User::find($id);
         if (!$user) {
             return response()->json(['success' => false, 'message' => 'Pengguna tidak ditemukan'], 404);
+        }
+
+        if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+            Storage::disk('public')->delete($user->avatar);
         }
 
         $user->delete();

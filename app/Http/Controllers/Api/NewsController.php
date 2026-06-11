@@ -26,14 +26,19 @@ class NewsController extends Controller
 
         $query = News::query();
 
-        // Jika status yang direquest adalah antrean verifikasi dan rolenya memiliki akses verifikasi, maka jangan filter user_id
+        // Jika status yang direquest adalah antrean verifikasi dan rolenya memiliki akses verifikasi
         // Cek permission: news.verify (bisa diatur untuk Verifikator, KSK, Admin)
         $isVerifikator = $user->hasPermission('news.verify');
+        $isAdmin = $user->role && $user->role->kode_role === 'P-01'; // Administrator Sistem
 
         if ($status === 'SENT_WAITING_VERIFICATION' && $isVerifikator) {
-            // Tampilkan semua berita yang menunggu verifikasi (tanpa memfilter user_id penulis)
+            // Filter "Read Assigned": Verifikator hanya melihat antrean dari Satuan Kerjanya sendiri.
+            // Administrator melihat semua antrean dari semua Satuan Kerja.
+            if (!$isAdmin) {
+                $query->where('satuan_kerja_id', $user->satuan_kerja_id);
+            }
         } else {
-            // Selain itu, hanya tampilkan milik sendiri
+            // Selain itu, hanya tampilkan milik sendiri (Draft/Tersimpan)
             $query->where('user_id', $user->id);
         }
         
@@ -310,7 +315,21 @@ class NewsController extends Controller
      */
     public function destroy(string $id)
     {
-        $news = News::where('user_id', Auth::id())->findOrFail($id);
+        $news = News::with('attachments')->where('user_id', Auth::id())->findOrFail($id);
+
+        // Hapus thumbnail
+        if ($news->thumbnail && \Illuminate\Support\Facades\Storage::disk('public')->exists($news->thumbnail)) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($news->thumbnail);
+        }
+
+        // Hapus file fisik lampiran dan data lampiran di database
+        foreach ($news->attachments as $attachment) {
+            if (\Illuminate\Support\Facades\Storage::disk('public')->exists($attachment->file_path)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($attachment->file_path);
+            }
+            $attachment->delete();
+        }
+
         $news->delete();
         
         return response()->json([
