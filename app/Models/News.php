@@ -14,6 +14,8 @@ class News extends Model
     protected $fillable = [
         'user_id',
         'category_id',
+        'jenis_berita',
+        'jenis_publikasi',
         'satuan_kerja_id',
         'judul',
         'thumbnail',

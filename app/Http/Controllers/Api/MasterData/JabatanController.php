@@ -11,7 +11,7 @@ class JabatanController extends Controller
 {
     public function index()
     {
-        $data = Jabatan::all();
+        $data = Jabatan::with('satuanKerja')->get();
         return response()->json(['success' => true, 'data' => $data]);
     }
 
@@ -20,6 +20,9 @@ class JabatanController extends Controller
         $validator = Validator::make($request->all(), [
             'kode_jabatan' => 'nullable|string|unique:jabatans,kode_jabatan',
             'nama_jabatan' => 'required|string|max:255',
+            'level_hierarki' => 'nullable|integer',
+            'satuan_kerja_id' => 'nullable|exists:satuan_kerjas,id',
+            'deskripsi' => 'nullable|string',
         ]);
 
         $data = $request->all();
@@ -53,6 +56,9 @@ class JabatanController extends Controller
         $validator = Validator::make($request->all(), [
             'kode_jabatan' => 'nullable|string|unique:jabatans,kode_jabatan,' . $id,
             'nama_jabatan' => 'required|string|max:255',
+            'level_hierarki' => 'nullable|integer',
+            'satuan_kerja_id' => 'nullable|exists:satuan_kerjas,id',
+            'deskripsi' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {

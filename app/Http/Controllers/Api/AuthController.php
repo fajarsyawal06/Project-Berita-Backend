@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Models\UserPreference;
+use App\Models\UserActivity;
 
 class AuthController extends Controller
 {
@@ -26,7 +28,7 @@ class AuthController extends Controller
         }
 
         // 3. Ambil data User beserta relasi Role-nya
-        $user = User::with('role.permissions')->where('email', $request->email)->first();
+        $user = User::with(['role.permissions', 'userPreference'])->where('email', $request->email)->first();
 
         // 4. Cek apakah akun dinonaktifkan
         if (!$user->status_aktif) {
@@ -38,6 +40,14 @@ class AuthController extends Controller
 
         // 5. Buat Token (Sanctum)
         $token = $user->createToken('auth_token')->plainTextToken;
+
+        // Catat aktivitas sesi baru (FR-MD-07)
+        UserActivity::create([
+            'user_id' => $user->id,
+            'session_start' => now(),
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent()
+        ]);
 
         // 6. Kirim Respons ke Frontend (React)
         return response()->json([
@@ -53,7 +63,7 @@ class AuthController extends Controller
                 'role' => $user->role ? $user->role->kode_role : null, // Mengirim 'P-01', 'P-04', dll ke React
                 'roles' => $user->role ? [['name' => $user->role->nama_role]] : [],
                 'permissions' => $user->role && $user->role->permissions ? $user->role->permissions->pluck('name') : [],
-                'preferences' => $user->preferences,
+                'preferences' => $user->userPreference ? $user->userPreference->preferences : null,
                 'satuan_kerja' => $user->satuanKerja ? [
                     'id' => $user->satuanKerja->id,
                     'nama_satker' => $user->satuanKerja->nama_satker
@@ -65,7 +75,7 @@ class AuthController extends Controller
     public function me(Request $request)
     {
         $user = Auth::user();
-        $user->load('role.permissions');
+        $user->load(['role.permissions', 'userPreference']);
 
         return response()->json([
             'status' => 'success',
@@ -78,7 +88,7 @@ class AuthController extends Controller
                 'role' => $user->role ? $user->role->kode_role : null,
                 'roles' => $user->role ? [['name' => $user->role->nama_role]] : [],
                 'permissions' => $user->role && $user->role->permissions ? $user->role->permissions->pluck('name') : [],
-                'preferences' => $user->preferences,
+                'preferences' => $user->userPreference ? $user->userPreference->preferences : null,
                 'satuan_kerja' => $user->satuanKerja ? [
                     'id' => $user->satuanKerja->id,
                     'nama_satker' => $user->satuanKerja->nama_satker
@@ -91,17 +101,22 @@ class AuthController extends Controller
     {
         $user = Auth::user();
         
-        // Merge existing preferences with new ones
-        $currentPreferences = is_array($user->preferences) ? $user->preferences : [];
+        // Dapatkan data preferensi saat ini atau buat yang baru jika belum ada
+        $userPreference = UserPreference::firstOrCreate(
+            ['user_id' => $user->id],
+            ['preferences' => []]
+        );
+        
+        $currentPreferences = is_array($userPreference->preferences) ? $userPreference->preferences : [];
         $newPreferences = $request->all();
         
-        $user->preferences = array_merge($currentPreferences, $newPreferences);
-        $user->save();
+        $userPreference->preferences = array_merge($currentPreferences, $newPreferences);
+        $userPreference->save();
 
         return response()->json([
             'status' => 'success',
             'message' => 'Preferences updated successfully',
-            'preferences' => $user->preferences
+            'preferences' => $userPreference->preferences
         ], 200);
     }
 
@@ -109,20 +124,29 @@ class AuthController extends Controller
     {
         $user = Auth::user();
         
-        // Cek jika ada aktivitas sebelumnya
-        if ($user->last_active_at) {
-            $lastActive = \Carbon\Carbon::parse($user->last_active_at);
-            $now = \Carbon\Carbon::now();
-            
-            $diffInMinutes = $lastActive->diffInMinutes($now);
-            
-            // Jika rentang waktu wajar (misal kurang dari 5 menit), tambahkan ke total online
-            if ($diffInMinutes > 0 && $diffInMinutes <= 5) {
-                $user->total_online_minutes = ($user->total_online_minutes ?? 0) + $diffInMinutes;
-            }
+        // Cari aktivitas (sesi) terbaru yang session_end-nya kosong atau baru saja diupdate
+        $latestActivity = UserActivity::where('user_id', $user->id)
+            ->whereNotNull('session_start')
+            ->orderBy('id', 'desc')
+            ->first();
+
+        if ($latestActivity) {
+            // Update session_end
+            $latestActivity->session_end = now();
+            $latestActivity->save();
+        } else {
+            // Jika tidak ada (mungkin terhapus), buat record baru agar sesi terekam
+            UserActivity::create([
+                'user_id' => $user->id,
+                'session_start' => now(),
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'session_end' => now()
+            ]);
         }
-        
-        $user->last_active_at = \Carbon\Carbon::now();
+
+        // Opsional: Tetap simpan last_active_at di users jika masih dipakai di fitur lain
+        $user->last_active_at = now();
         $user->save();
 
         return response()->json([

@@ -24,8 +24,8 @@ class User extends Authenticatable
         'avatar',
         'status_aktif',
         'last_login_at',
+        'last_login_at',
         'last_ip_address',
-        'preferences',
     ];
 
     // Kolom yang disembunyikan saat data User di-convert ke JSON (Keamanan)
@@ -40,7 +40,6 @@ class User extends Authenticatable
         'password' => 'hashed',
         'status_aktif' => 'boolean',
         'last_login_at' => 'datetime',
-        'preferences' => 'array', // JSON di database otomatis jadi Array di PHP
     ];
 
     /* =========================================
@@ -111,8 +110,16 @@ class User extends Authenticatable
             return false;
         }
 
-        // Asumsi relasi Role -> Permissions menggunakan nama metode 'permissions'
-        // dan tabel permissions memiliki kolom 'name'
         return $this->role->permissions->contains('name', $permissionName);
+    }
+
+    public function userPreference()
+    {
+        return $this->hasOne(UserPreference::class);
+    }
+
+    public function activities()
+    {
+        return $this->hasMany(UserActivity::class);
     }
 }

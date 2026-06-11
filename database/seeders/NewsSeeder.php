@@ -13,12 +13,13 @@ class NewsSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Buat Kategori Berita
+        // 1. Buat Kategori Berita yang Realistis
         $categories = [
-            ['kode_kategori' => 'KTG-001', 'nama_kategori' => 'Keamanan & Ketertiban', 'warna_badge' => '#EF4444', 'ikon' => 'shield'],
-            ['kode_kategori' => 'KTG-002', 'nama_kategori' => 'Bencana Alam', 'warna_badge' => '#F59E0B', 'ikon' => 'alert-triangle'],
-            ['kode_kategori' => 'KTG-003', 'nama_kategori' => 'Infrastruktur', 'warna_badge' => '#3B82F6', 'ikon' => 'building'],
-            ['kode_kategori' => 'KTG-004', 'nama_kategori' => 'Layanan Publik', 'warna_badge' => '#10B981', 'ikon' => 'users'],
+            ['kode_kategori' => 'KTG-001', 'nama_kategori' => 'Infrastruktur & Pembangunan', 'warna_badge' => '#3B82F6', 'ikon' => 'ri-building-line', 'urutan_tampilan' => 1, 'status_aktif' => true],
+            ['kode_kategori' => 'KTG-002', 'nama_kategori' => 'Sosial & Budaya', 'warna_badge' => '#8B5CF6', 'ikon' => 'ri-group-line', 'urutan_tampilan' => 2, 'status_aktif' => true],
+            ['kode_kategori' => 'KTG-003', 'nama_kategori' => 'Keamanan & Ketertiban', 'warna_badge' => '#EF4444', 'ikon' => 'ri-shield-line', 'urutan_tampilan' => 3, 'status_aktif' => true],
+            ['kode_kategori' => 'KTG-004', 'nama_kategori' => 'Bencana Alam', 'warna_badge' => '#F59E0B', 'ikon' => 'ri-alert-line', 'urutan_tampilan' => 4, 'status_aktif' => true],
+            ['kode_kategori' => 'KTG-005', 'nama_kategori' => 'Pendidikan & Teknologi', 'warna_badge' => '#10B981', 'ikon' => 'ri-macbook-line', 'urutan_tampilan' => 5, 'status_aktif' => true],
         ];
 
         foreach ($categories as $cat) {
@@ -29,68 +30,68 @@ class NewsSeeder extends Seeder
         TutorialCategory::updateOrCreate(['nama_kategori' => 'Panduan Aplikasi'], ['ikon' => 'monitor']);
         TutorialCategory::updateOrCreate(['nama_kategori' => 'SOP Jurnalistik'], ['ikon' => 'book-open']);
 
-        // 3. Buat Data Berita Dummy
+        // 3. Buat Data Berita Realistic
 
         // Berita 1: Status PUBLISHED
-        $judul1 = 'Aksi Demonstrasi Damai Mahasiswa di Depan Balaikota';
+        $judul1 = 'Peresmian Pusat Pelatihan Teknologi Informasi di Jawa Barat';
         $news1 = News::create([
-            'user_id'          => 1,
-            'category_id'      => 1, // Keamanan
-            'satuan_kerja_id'  => 1,
+            'user_id'          => 1, // Andi Saputra (Kontributor)
+            'category_id'      => 5, // Pendidikan & Teknologi
+            'satuan_kerja_id'  => 2, // Kanwil Jabar
             'judul'            => $judul1,
             'slug'             => Str::slug($judul1) . '-' . time(),
-            'what_content'     => 'Telah terjadi aksi demonstrasi damai di depan gedung balaikota.',
-            'who_involved'     => 'Aliansi Mahasiswa dan aparat kepolisian setempat.',
-            'when_occurred'    => 'Senin, 15 Mei pukul 10:00 WITA.',
-            'where_location'   => 'Jalan Jenderal Sudirman, depan Gedung Pemerintahan.',
-            'why_happened'     => 'Menuntut transparansi anggaran daerah tahun berjalan.',
-            'how_resolved'     => 'Massa membubarkan diri dengan tertib pada pukul 14:00 WITA setelah ditemui oleh perwakilan dewan.',
-            'latitude'         => -5.147665, 
-            'longitude'        => 119.412613,
-            'location_address' => 'Jl. Jend. Sudirman, Pusat Kota',
+            'what_content'     => 'Telah dilaksanakan acara peresmian Pusat Pelatihan Teknologi Informasi tingkat provinsi yang ditujukan untuk meningkatkan kompetensi digital aparatur sipil negara dan masyarakat umum.',
+            'who_involved'     => 'Gubernur Jawa Barat, Kepala Kanwil Jabar, dan perwakilan dari Kementerian Komunikasi.',
+            'when_occurred'    => 'Rabu, 18 Mei 2026 pukul 09:00 WIB.',
+            'where_location'   => 'Gedung Sate, Bandung, Jawa Barat.',
+            'why_happened'     => 'Program ini merupakan bagian dari inisiatif nasional untuk mempercepat transformasi digital di daerah.',
+            'how_resolved'     => 'Acara berlangsung lancar dan ditutup dengan pemotongan pita serta penandatanganan prasasti.',
+            'latitude'         => -6.902481, 
+            'longitude'        => 107.618810,
+            'location_address' => 'Jl. Diponegoro No.22, Citarum, Kec. Bandung Wetan, Kota Bandung',
             'status'           => 'PUBLISHED',
-            'views_count'      => 145,
+            'views_count'      => 345,
         ]);
 
         NewsAttachment::create([
             'news_id'           => $news1->id,
             'file_type'         => 'image',
-            'file_path'         => 'news_attachments/dummy_demo.jpg',
-            'original_filename' => 'foto_demo_lapangan.jpg',
+            'file_path'         => 'news_attachments/peresmian_jabar.jpg',
+            'original_filename' => 'foto_peresmian_gedung.jpg',
             'mime_type'         => 'image/jpeg',
-            'file_size_bytes'   => 1024000,
+            'file_size_bytes'   => 2048000,
         ]);
 
         // Berita 2: Status SENT_WAITING_VERIFICATION
-        $judul2 = 'Pohon Tumbang Menutup Akses Jalan Lintas Provinsi KM 12';
+        $judul2 = 'Banjir Bandang Melanda Sebagian Wilayah Kabupaten Bandung';
         $news2 = News::create([
             'user_id'          => 1,
-            'category_id'      => 2, // Bencana Alam
-            'satuan_kerja_id'  => 1,
+            'category_id'      => 4, // Bencana Alam
+            'satuan_kerja_id'  => 2, // Kanwil Jabar
             'judul'            => $judul2,
             'slug'             => Str::slug($judul2) . '-' . time(),
-            'what_content'     => 'Pohon tumbang menutup akses jalan raya provinsi.',
-            'who_involved'     => 'Tim BPBD dan warga sekitar.',
-            'when_occurred'    => 'Selasa, 16 Mei pukul 15:30 WITA.',
-            'where_location'   => 'Jalan Lintas Provinsi KM 12.',
-            'why_happened'     => 'Angin kencang disertai hujan lebat mengguyur wilayah tersebut selama 2 jam.',
-            'how_resolved'     => 'Saat ini tim masih melakukan proses evakuasi dan pemotongan batang pohon. Jalan dialihkan sementara.',
-            'latitude'         => -5.132214,
-            'longitude'        => 119.421516,
-            'location_address' => 'KM 12 Lintas Provinsi',
+            'what_content'     => 'Hujan lebat yang mengguyur sejak semalam mengakibatkan meluapnya sungai Citarum dan merendam puluhan rumah warga di Kabupaten Bandung.',
+            'who_involved'     => 'Badan Penanggulangan Bencana Daerah (BPBD) Jawa Barat dan relawan lokal.',
+            'when_occurred'    => 'Selasa, 17 Mei 2026 pukul 03:00 WIB.',
+            'where_location'   => 'Kecamatan Dayeuhkolot dan Baleendah, Kabupaten Bandung.',
+            'why_happened'     => 'Curah hujan yang ekstrem dan sistem drainase yang tidak mampu menampung debit air kiriman.',
+            'how_resolved'     => 'Tim gabungan BPBD sedang melakukan evakuasi warga menggunakan perahu karet dan mendirikan posko pengungsian di dataran yang lebih tinggi.',
+            'latitude'         => -6.993444,
+            'longitude'        => 107.622436,
+            'location_address' => 'Kecamatan Dayeuhkolot, Kabupaten Bandung',
             'status'           => 'SENT_WAITING_VERIFICATION',
         ]);
 
         // Berita 3: Status DRAFT
-        $judul3 = 'Laporan Keterlambatan Proyek Perbaikan Jembatan Desa';
+        $judul3 = 'Laporan Progres Pembangunan Jalan Tol Lintas Selatan';
         $news3 = News::create([
             'user_id'          => 1,
-            'category_id'      => 3, // Infrastruktur
-            'satuan_kerja_id'  => 1,
+            'category_id'      => 1, // Infrastruktur & Pembangunan
+            'satuan_kerja_id'  => 3, // Kanwil Jatim
             'judul'            => $judul3,
             'slug'             => Str::slug($judul3) . '-' . time(),
-            'what_content'     => 'Proyek perbaikan jembatan penghubung desa terhambat.',
-            'who_involved'     => 'Kontraktor pelaksana CV Bangun Bersama.',
+            'what_content'     => 'Pembangunan seksi ketiga jalan tol lintas selatan Jawa Timur dilaporkan mengalami keterlambatan.',
+            'who_involved'     => 'Kementerian PUPR dan Kontraktor pelaksana BUMN Karya.',
             'when_occurred'    => null,
             'where_location'   => null,
             'why_happened'     => null,
@@ -101,56 +102,56 @@ class NewsSeeder extends Seeder
         NewsAttachment::create([
             'news_id'           => $news3->id,
             'file_type'         => 'document',
-            'file_path'         => 'news_attachments/laporan_proyek.pdf', 
-            'original_filename' => 'laporan_mingguan_proyek.pdf',
+            'file_path'         => 'news_attachments/laporan_tol_jatim.pdf', 
+            'original_filename' => 'laporan_mingguan_tol.pdf',
             'mime_type'         => 'application/pdf',
-            'file_size_bytes'   => 512000,
+            'file_size_bytes'   => 1024000,
         ]);
 
-        // Generate lebih banyak data dummy agar aplikasi terlihat padat (FR-BR-07)
+        // Generate lebih banyak data dummy dengan Faker
         $faker = \Faker\Factory::create('id_ID');
 
-        // Buat 15 Berita PUBLISHED untuk tes widget trending (beberapa di 24 jam terakhir)
+        // Buat 15 Berita PUBLISHED untuk tes widget trending
         for ($i = 0; $i < 15; $i++) {
-            $judul = $faker->sentence(6);
+            $judul = $faker->realText(50);
             News::create([
-                'user_id'          => 1,
-                'category_id'      => $faker->numberBetween(1, 4),
-                'satuan_kerja_id'  => 1,
+                'user_id'          => $faker->numberBetween(1, 4),
+                'category_id'      => $faker->numberBetween(1, 5),
+                'satuan_kerja_id'  => $faker->numberBetween(1, 13),
                 'judul'            => $judul,
                 'slug'             => Str::slug($judul) . '-pub-' . time() . $i,
-                'what_content'     => $faker->paragraph(),
-                'who_involved'     => $faker->name() . ' dan warga.',
+                'what_content'     => $faker->realText(300),
+                'who_involved'     => 'Pihak ' . $faker->company() . ' dan warga setempat.',
                 'when_occurred'    => $faker->dateTimeThisMonth()->format('l, d F Y H:i'),
-                'where_location'   => $faker->address(),
-                'why_happened'     => $faker->sentence(10),
-                'how_resolved'     => 'Sedang ditangani oleh pihak berwenang.',
-                'latitude'         => $faker->latitude(-6, -5),
-                'longitude'        => $faker->longitude(119, 120),
-                'location_address' => $faker->streetAddress(),
+                'where_location'   => $faker->city() . ', ' . $faker->state(),
+                'why_happened'     => $faker->realText(100),
+                'how_resolved'     => 'Masih dalam proses pemantauan oleh tim terkait.',
+                'latitude'         => $faker->latitude(-8, 5),
+                'longitude'        => $faker->longitude(95, 140),
+                'location_address' => $faker->address(),
                 'status'           => 'PUBLISHED',
-                'views_count'      => $faker->numberBetween(10, 500),
-                'shares_count'     => $faker->numberBetween(0, 100),
-                'comments_count'   => $faker->numberBetween(0, 50),
-                'created_at'       => $faker->dateTimeBetween('-2 days', 'now'),
+                'views_count'      => $faker->numberBetween(50, 2000),
+                'shares_count'     => $faker->numberBetween(5, 300),
+                'comments_count'   => $faker->numberBetween(0, 150),
+                'created_at'       => $faker->dateTimeBetween('-1 month', 'now'),
             ]);
         }
 
         // Buat 8 Berita SENT_WAITING_VERIFICATION untuk tes antrean
         for ($i = 0; $i < 8; $i++) {
-            $judul = $faker->sentence(6);
+            $judul = $faker->realText(60);
             News::create([
-                'user_id'          => 1,
-                'category_id'      => $faker->numberBetween(1, 4),
-                'satuan_kerja_id'  => 1,
+                'user_id'          => $faker->numberBetween(1, 3),
+                'category_id'      => $faker->numberBetween(1, 5),
+                'satuan_kerja_id'  => $faker->numberBetween(1, 13),
                 'judul'            => $judul,
                 'slug'             => Str::slug($judul) . '-wait-' . time() . $i,
-                'what_content'     => $faker->paragraph(),
+                'what_content'     => $faker->realText(250),
                 'who_involved'     => $faker->name(),
                 'when_occurred'    => $faker->dateTimeThisMonth()->format('l, d F Y H:i'),
-                'where_location'   => $faker->address(),
-                'why_happened'     => $faker->sentence(),
-                'how_resolved'     => $faker->sentence(),
+                'where_location'   => $faker->city(),
+                'why_happened'     => $faker->realText(100),
+                'how_resolved'     => $faker->realText(80),
                 'status'           => 'SENT_WAITING_VERIFICATION',
             ]);
         }

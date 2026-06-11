@@ -13,6 +13,7 @@ class Jabatan extends Model
         'kode_jabatan',
         'nama_jabatan',
         'level_hierarki',
+        'satuan_kerja_id',
         'deskripsi'
     ];
 
@@ -20,5 +21,11 @@ class Jabatan extends Model
     public function users()
     {
         return $this->hasMany(User::class);
+    }
+
+    // Relasi: Satu Jabatan bisa terkait dengan satu Satuan Kerja Induk
+    public function satuanKerja()
+    {
+        return $this->belongsTo(SatuanKerja::class, 'satuan_kerja_id');
     }
 }

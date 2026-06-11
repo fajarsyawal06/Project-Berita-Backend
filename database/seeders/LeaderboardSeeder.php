@@ -13,11 +13,6 @@ use Carbon\Carbon;
 
 class LeaderboardSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
     public function run()
     {
         $faker = Faker::create('id_ID');
@@ -28,23 +23,22 @@ class LeaderboardSeeder extends Seeder
             ['nama_role' => 'Pembuat Berita']
         );
 
-        // Pastikan ada satuan kerja
+        // Ambil ID satuan kerja yang sudah ada atau buat default
         $satker = SatuanKerja::firstOrCreate(
             ['id' => 1],
-            ['nama_satuan_kerja' => 'BPS Pusat']
+            ['kode_unik' => 'SAT-JKT', 'nama_satuan_kerja' => 'Kantor Pusat Jakarta', 'level' => 1, 'provinsi_wilayah' => 'DKI Jakarta']
         );
 
-        // Buat 15 user dummy
+        // Buat 15 user dummy tambahan untuk leaderboard
         for ($i = 1; $i <= 15; $i++) {
             $user = User::create([
                 'nip_pegawai' => $faker->unique()->numerify('198#######'),
                 'nama_lengkap' => $faker->name,
                 'email' => $faker->unique()->safeEmail,
-                'password' => Hash::make('password'),
-                'satuan_kerja_id' => $satker->id,
+                'password' => Hash::make('password123'),
+                'satuan_kerja_id' => $faker->numberBetween(1, 13), // 13 satker
                 'role_id' => $role->id,
                 'status_aktif' => true,
-                // Mengisi poin aktif agar user juga terurut berdasarkan poin ini
                 'poin_aktif' => 0,
             ]);
 

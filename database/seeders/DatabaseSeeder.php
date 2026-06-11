@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             PointHistorySeeder::class,
             LeaderboardSeeder::class,
             PermissionSeeder::class,
+            PointConfigurationSeeder::class,
         ]);
     }
 }

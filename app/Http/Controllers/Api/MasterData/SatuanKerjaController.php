@@ -11,7 +11,7 @@ class SatuanKerjaController extends Controller
 {
     public function index()
     {
-        $data = SatuanKerja::all();
+        $data = SatuanKerja::with('parent')->get();
         return response()->json(['success' => true, 'data' => $data]);
     }
 
@@ -20,6 +20,10 @@ class SatuanKerjaController extends Controller
         $validator = Validator::make($request->all(), [
             'kode_unik' => 'nullable|string|unique:satuan_kerjas,kode_unik',
             'nama_satuan_kerja' => 'required|string|max:255',
+            'provinsi_wilayah' => 'nullable|string|max:255',
+            'level' => 'nullable|integer',
+            'parent_id' => 'nullable|exists:satuan_kerjas,id',
+            'status_aktif' => 'nullable|boolean',
         ]);
 
         $data = $request->all();
@@ -27,6 +31,15 @@ class SatuanKerjaController extends Controller
             $latest = SatuanKerja::latest('id')->first();
             $nextId = $latest ? $latest->id + 1 : 1;
             $data['kode_unik'] = 'SAT-' . str_pad($nextId, 3, '0', STR_PAD_LEFT);
+        }
+
+        // Set default status_aktif to true if not provided
+        if (!isset($data['status_aktif'])) {
+            $data['status_aktif'] = true;
+        }
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
 
         $satuanKerja = SatuanKerja::create($data);
@@ -53,6 +66,10 @@ class SatuanKerjaController extends Controller
         $validator = Validator::make($request->all(), [
             'kode_unik' => 'nullable|string|unique:satuan_kerjas,kode_unik,' . $id,
             'nama_satuan_kerja' => 'required|string|max:255',
+            'provinsi_wilayah' => 'nullable|string|max:255',
+            'level' => 'nullable|integer',
+            'parent_id' => 'nullable|exists:satuan_kerjas,id',
+            'status_aktif' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {

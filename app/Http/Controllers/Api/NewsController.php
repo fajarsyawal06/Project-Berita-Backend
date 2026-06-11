@@ -70,6 +70,8 @@ class NewsController extends Controller
         $rules = [
             'judul'            => 'required|string|max:255',
             'category_id'      => 'required|exists:news_categories,id',
+            'jenis_berita'     => 'nullable|in:TEKS,VIDEO,FOTO',
+            'jenis_publikasi'  => 'nullable|in:INTERNAL,UMUM',
             'what_content'     => $isSubmit ? 'required|string' : 'nullable|string',
             'who_involved'     => $isSubmit ? 'required|string' : 'nullable|string',
             'when_occurred'    => $isSubmit ? 'required|string' : 'nullable|string',
@@ -112,6 +114,8 @@ class NewsController extends Controller
             $news = News::create([
                 'user_id'          => $user->id,
                 'category_id'      => $request->category_id,
+                'jenis_berita'     => $request->jenis_berita ?? 'TEKS',
+                'jenis_publikasi'  => $request->jenis_publikasi ?? 'UMUM',
                 'satuan_kerja_id'  => $user->satuan_kerja_id, // Mengambil otomatis dari profil user
                 'judul'            => $request->judul,
                 'thumbnail'        => $thumbnailPath,
@@ -401,7 +405,7 @@ class NewsController extends Controller
 
         // Ambil data dari request yang dikirimkan oleh Frontend (bisa parsial/sebagian)
         $dataToUpdate = $request->only([
-            'judul', 'category_id', 'what_content', 'who_involved', 
+            'judul', 'category_id', 'jenis_berita', 'jenis_publikasi', 'what_content', 'who_involved', 
             'when_occurred', 'where_location', 'why_happened', 'how_resolved', 
             'latitude', 'longitude', 'location_address'
         ]);
@@ -468,7 +472,11 @@ class NewsController extends Controller
     public function getComments(string $id)
     {
         $news = News::findOrFail($id);
-        $comments = $news->comments()->with('user:id,nama_lengkap')->latest()->get();
+        $comments = $news->comments()
+                         ->whereNull('parent_id')
+                         ->with(['user:id,nama_lengkap,avatar', 'replies.user:id,nama_lengkap,avatar'])
+                         ->latest()
+                         ->get();
 
         return response()->json([
             'status' => 'success',
@@ -479,7 +487,8 @@ class NewsController extends Controller
     public function postComment(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'content' => 'required|string|max:1000'
+            'content' => 'required|string|max:1000',
+            'parent_id' => 'nullable|exists:news_comments,id'
         ]);
 
         if ($validator->fails()) {
@@ -493,6 +502,7 @@ class NewsController extends Controller
         
         $comment = $news->comments()->create([
             'user_id' => Auth::id(),
+            'parent_id' => $request->parent_id,
             'content' => $request->content
         ]);
 
@@ -501,7 +511,7 @@ class NewsController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Komentar berhasil ditambahkan',
-            'data' => $comment->load('user:id,nama_lengkap')
+            'data' => $comment->load(['user:id,nama_lengkap,avatar', 'replies.user:id,nama_lengkap,avatar'])
         ], 201);
     }
 }

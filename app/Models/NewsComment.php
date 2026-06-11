@@ -12,6 +12,7 @@ class NewsComment extends Model
     protected $fillable = [
         'news_id',
         'user_id',
+        'parent_id',
         'content',
     ];
 
@@ -29,5 +30,21 @@ class NewsComment extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the parent comment (if this is a reply).
+     */
+    public function parent()
+    {
+        return $this->belongsTo(NewsComment::class, 'parent_id');
+    }
+
+    /**
+     * Get the replies to this comment.
+     */
+    public function replies()
+    {
+        return $this->hasMany(NewsComment::class, 'parent_id');
     }
 }

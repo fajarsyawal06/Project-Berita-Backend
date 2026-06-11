@@ -83,4 +83,10 @@ class NewsCategoryController extends Controller
 
         return response()->json(['success' => true, 'message' => 'Kategori berhasil dihapus']);
     }
+
+    public function listActive()
+    {
+        $data = NewsCategory::where('status_aktif', true)->orderBy('urutan_tampilan', 'asc')->get();
+        return response()->json(['success' => true, 'data' => $data]);
+    }
 }

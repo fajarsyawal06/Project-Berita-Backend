@@ -21,8 +21,17 @@ class PerformanceController extends Controller
         // Pastikan kolom 'views' benar-benar ada di tabel news kamu 
         $totalViews = $user->news()->sum('views_count') ?? 0;
 
-        // 4. Konversi durasi online dari menit ke jam (dibulatkan 1 angka di belakang koma)
-        $durasiOnlineJam = round($user->durasi_online_menit / 60, 1); 
+        // 4. Hitung durasi online dari tabel user_activities (selisih session_end dan session_start)
+        $totalDurasiMenit = \App\Models\UserActivity::where('user_id', $user->id)
+            ->whereNotNull('session_start')
+            ->whereNotNull('session_end')
+            ->get()
+            ->sum(function ($activity) {
+                return $activity->session_start->diffInMinutes($activity->session_end);
+            });
+
+        // Konversi durasi online dari menit ke jam (dibulatkan 1 angka di belakang koma)
+        $durasiOnlineJam = round($totalDurasiMenit / 60, 1); 
 
         // 5. Hitung Tren 7 Hari Terakhir
         $trend7Hari = [];
@@ -43,8 +52,8 @@ class PerformanceController extends Controller
                 'profil' => [
                     // PERBAIKAN: Gunakan nama_lengkap sesuai fillable di User.php
                     'nama_lengkap' => $user->nama_lengkap, 
-                    // PERBAIKAN: Panggil satuanKerja
-                    'satuan_kerja' => $user->satuanKerja ? $user->satuanKerja->nama : 'Belum diatur',
+                    // PERBAIKAN: Panggil satuanKerja dengan properti yang benar
+                    'satuan_kerja' => $user->satuanKerja ? $user->satuanKerja->nama_satuan_kerja : 'Belum diatur',
                     'avatar' => $user->avatar ?? null, 
                 ],
                 'statistik' => [

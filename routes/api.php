@@ -10,7 +10,9 @@ use App\Http\Controllers\Api\MasterData\JabatanController;
 use App\Http\Controllers\Api\MasterData\NewsCategoryController;
 use App\Http\Controllers\Api\MasterData\UserController;
 use App\Http\Controllers\Api\MasterData\PermissionController;
+use App\Http\Controllers\Api\MasterData\PointConfigurationController;
 use App\Http\Controllers\Api\AnalyticController;
+use App\Http\Controllers\Api\NotificationController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\PerformanceController;
 use App\Http\Controllers\Api\LeaderboardController;
@@ -40,6 +42,7 @@ Route::get('/season-winners', [SeasonWinnerController::class, 'index']);
 // Endpoint Master Data Read-Only (Public Dropdown)
 Route::get('/satuan-kerja/list', [SatuanKerjaController::class, 'index']);
 Route::get('/roles/list', [RoleController::class, 'index']);
+Route::get('/kategori-berita/list', [NewsCategoryController::class, 'listActive']);
 
 // Endpoint Daftar Video Panduan (Berdasarkan Role User)
 Route::get('/tutorial-videos', [TutorialVideoUserController::class, 'index']);
@@ -56,11 +59,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/user/ping', [AuthController::class, 'ping']);
 
+    // Endpoint Notifikasi
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+
     Route::get('/profile/performance', [PerformanceController::class, 'index']);
     Route::get('/points-ledger', [\App\Http\Controllers\Api\PointLedgerController::class, 'index']);
 
     // Endpoint untuk mengupdate preferensi pengguna (seperti dashboard_layout)
     Route::put('/user/preferences', [AuthController::class, 'updatePreferences']);
+
+    // Endpoint untuk mengupdate profil (nama, avatar, password)
+    Route::post('/user/profile', [\App\Http\Controllers\Api\ProfileController::class, 'update']);
 
     // Endpoint untuk share dashboard
     Route::post('/dashboard/share', [\App\Http\Controllers\Api\DashboardShareController::class, 'share']);
@@ -121,6 +132,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/news/{id}/submit', [NewsWorkflowController::class, 'submit'])->middleware('permission:news.create');
     Route::post('/news/{id}/approve', [NewsWorkflowController::class, 'approve'])->middleware('permission:news.verify');
     Route::post('/news/{id}/reject', [NewsWorkflowController::class, 'reject'])->middleware('permission:news.verify');
+    Route::post('/news/{id}/force-publish', [NewsWorkflowController::class, 'forcePublish'])->middleware('permission:news.force_publish');
     $table = Route::get('/news/{id}/audit-trail', [NewsWorkflowController::class, 'auditTrail']);
 
     // Rute untuk melihat draft milik sendiri
@@ -140,6 +152,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('/master-data/jabatan', JabatanController::class);
         Route::apiResource('/master-data/kategori-berita', NewsCategoryController::class);
         Route::apiResource('/master-data/pengguna', UserController::class);
+        
+        // Konfigurasi Poin (Hanya index, show, update)
+        Route::get('/master-data/konfigurasi-poin', [PointConfigurationController::class, 'index']);
+        Route::get('/master-data/konfigurasi-poin/{id}', [PointConfigurationController::class, 'show']);
+        Route::put('/master-data/konfigurasi-poin/{id}', [PointConfigurationController::class, 'update']);
 
         // CRUD Video Panduan (Khusus Administrator)
         Route::get('/admin/tutorial-categories', [AdminTutorialVideoController::class, 'getCategories']);
