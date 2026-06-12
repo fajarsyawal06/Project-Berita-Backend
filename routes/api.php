@@ -192,3 +192,12 @@ Route::get('/news/{id}/export-pdf', [NewsController::class, 'exportPdf']);
 Route::post('/news/{id}/share', [NewsController::class, 'share']);
 Route::get('/news/{id}/comments', [NewsController::class, 'getComments']);
 Route::post('/news/{id}/comments', [NewsController::class, 'postComment'])->middleware('auth:api');
+
+// Endpoint untuk menyajikan file storage statis dengan CORS headers
+Route::get('/storage/{path}', function ($path) {
+    $filePath = storage_path('app/public/' . $path);
+    if (!file_exists($filePath)) {
+        abort(404);
+    }
+    return response()->file($filePath);
+})->where('path', '.*');
