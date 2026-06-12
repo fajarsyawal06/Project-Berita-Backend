@@ -22,7 +22,7 @@ class TrendingNewsController extends Controller
 
         if ($tab === 'lokal') {
             // Require authentication for local tab to know the user's Satuan Kerja
-            $user = Auth::guard('sanctum')->user();
+            $user = Auth::guard('api')->user();
             
             if (!$user) {
                 return response()->json([

@@ -19,8 +19,8 @@ class AuthController extends Controller
             'password' => 'required'
         ]);
 
-        // 2. Cek Kredensial
-        if (!Auth::attempt($request->only('email', 'password'))) {
+        // 2. Cek Kredensial & Buat Token
+        if (! $token = auth('api')->attempt($request->only('email', 'password'))) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Email atau Password salah.'
@@ -38,8 +38,8 @@ class AuthController extends Controller
             ], 403);
         }
 
-        // 5. Buat Token (Sanctum)
-        $token = $user->createToken('auth_token')->plainTextToken;
+        // 5. Token JWT sudah didapat di atas
+        // (Token expiration diatur di config/jwt.php, default 60 menit, akan kita set 15 di sana)
 
         // Catat aktivitas sesi baru (FR-MD-07)
         UserActivity::create([
@@ -153,5 +153,33 @@ class AuthController extends Controller
             'status' => 'success',
             'message' => 'Ping recorded'
         ], 200);
+    }
+
+    /**
+     * Refresh a token.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function refresh()
+    {
+        return response()->json([
+            'status' => 'success',
+            'token' => auth('api')->refresh(),
+        ]);
+    }
+
+    /**
+     * Log the user out (Invalidate the token).
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function logout()
+    {
+        auth('api')->logout();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Successfully logged out'
+        ]);
     }
 }

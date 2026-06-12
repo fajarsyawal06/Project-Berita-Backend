@@ -35,8 +35,11 @@ class NewsSearchService
         }
         $query->selectRaw("MATCH(news.search_vector) AGAINST(? IN BOOLEAN MODE) AS relevance_score", [$booleanSearch]);
 
-        // Filter data yang cocok saja
-        $query->whereRaw("MATCH(news.search_vector) AGAINST(? IN BOOLEAN MODE)", [$booleanSearch]);
+        // Filter data yang cocok saja (Kombinasi FULLTEXT dan LIKE fallback untuk judul)
+        $query->where(function($q) use ($booleanSearch, $searchKeyword) {
+            $q->whereRaw("MATCH(news.search_vector) AGAINST(? IN BOOLEAN MODE)", [$booleanSearch])
+              ->orWhere('news.judul', 'LIKE', "%{$searchKeyword}%");
+        });
 
         // Urutkan berdasarkan relevansi tertinggi
         $query->orderByDesc('relevance_score');

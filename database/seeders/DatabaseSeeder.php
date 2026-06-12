@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             LeaderboardSeeder::class,
             PermissionSeeder::class,
             PointConfigurationSeeder::class,
+            FeatureToggleSeeder::class,
         ]);
     }
 }

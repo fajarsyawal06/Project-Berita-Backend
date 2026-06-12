@@ -23,15 +23,24 @@ class DashboardShareController extends Controller
 
         $user = $request->user();
 
-        // Ensure user has permission (dashboard.share)
-        if (!$user->hasPermission('dashboard.share')) {
-            return response()->json(['message' => 'Unauthorized. Only KSK and Admins can share dashboards.'], 403);
-        }
-
         // Generate Tokenized unique string (UUIDv4 + hash signature)
         $uuid = Str::uuid()->toString();
         $signature = hash_hmac('sha256', $uuid, config('app.key'));
-        $token = $uuid . '.' . $signature;
+        $rawToken = $uuid . '.' . $signature;
+
+        // Encrypt with AES-256-GCM (NFR-SEC-02)
+        $cipher = 'aes-256-gcm';
+        $key = config('app.key');
+        if (Str::startsWith($key, 'base64:')) {
+            $key = base64_decode(substr($key, 7));
+        }
+        $ivlen = openssl_cipher_iv_length($cipher);
+        $iv = openssl_random_pseudo_bytes($ivlen);
+        $tag = '';
+        $ciphertext = openssl_encrypt($rawToken, $cipher, $key, OPENSSL_RAW_DATA, $iv, $tag);
+        
+        // Encode to URL-safe base64 string
+        $token = rtrim(strtr(base64_encode($iv . $tag . $ciphertext), '+/', '-_'), '=');
 
         $configuration = [
             'dashboard_layout' => $request->layouts,
@@ -77,8 +86,31 @@ class DashboardShareController extends Controller
             ], 404);
         }
 
-        // Verify signature part (optional extra security to ensure it matches the format)
-        $parts = explode('.', $token);
+        // Decode and Decrypt AES-256-GCM
+        $decoded = base64_decode(strtr($token, '-_', '+/'));
+        $cipher = 'aes-256-gcm';
+        $key = config('app.key');
+        if (Str::startsWith($key, 'base64:')) {
+            $key = base64_decode(substr($key, 7));
+        }
+        $ivlen = openssl_cipher_iv_length($cipher);
+        
+        if (strlen($decoded) <= $ivlen + 16) {
+            return response()->json(['status' => 'error', 'message' => 'Invalid token format.'], 400);
+        }
+
+        $iv = substr($decoded, 0, $ivlen);
+        $tag = substr($decoded, $ivlen, 16);
+        $ciphertext = substr($decoded, $ivlen + 16);
+
+        $rawToken = openssl_decrypt($ciphertext, $cipher, $key, OPENSSL_RAW_DATA, $iv, $tag);
+
+        if ($rawToken === false) {
+             return response()->json(['status' => 'error', 'message' => 'Token decryption failed.'], 400);
+        }
+
+        // Verify signature part
+        $parts = explode('.', $rawToken);
         if (count($parts) === 2) {
             $uuid = $parts[0];
             $signature = $parts[1];
@@ -89,6 +121,8 @@ class DashboardShareController extends Controller
                     'message' => 'Token signature mismatch.'
                 ], 400);
             }
+        } else {
+            return response()->json(['status' => 'error', 'message' => 'Invalid token payload.'], 400);
         }
 
         // Check expiration

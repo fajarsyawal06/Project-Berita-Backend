@@ -15,6 +15,7 @@ class NewsStatusLog extends Model
         'old_status',
         'new_status',
         'reason',
+        'ip_address',
     ];
 
     protected $appends = [

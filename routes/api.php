@@ -24,6 +24,8 @@ use App\Http\Controllers\Api\MasterData\AdminTutorialCategoryController;
 use App\Http\Controllers\Api\TutorialVideoUserController;
 use App\Http\Controllers\Api\AdminTutorialArticleController;
 use App\Http\Controllers\Api\TutorialArticleUserController;
+use App\Http\Controllers\Api\FeatureConfigController;
+use App\Http\Controllers\Api\FeatureToggleController;
 
 use Illuminate\Support\Facades\Artisan;
 
@@ -33,6 +35,9 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/news/public', [NewsListingController::class, 'publicIndex']);
 Route::get('/news/trending', [NewsListingController::class, 'trending']); // FR-BR-07 (Harian)
 Route::get('/trending', [\App\Http\Controllers\Api\TrendingNewsController::class, 'index']); // FR-TP-01 (Nasional/Lokal 7 Hari)
+
+// Endpoint Konfigurasi Fitur
+Route::get('/features', [FeatureConfigController::class, 'index']);
 
 // Endpoint Publik untuk Viewer Umum (Guest)
 Route::get('/leaderboard', [LeaderboardController::class, 'index']);
@@ -54,10 +59,12 @@ Route::get('/tutorial-articles', [TutorialArticleUserController::class, 'index']
 Route::get('/tutorial-articles/{id}', [TutorialArticleUserController::class, 'show']);
 
 // Endpoint ini dilindungi (Hanya bisa diakses jika menyertakan Token JWT/Sanctum)
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:api')->group(function () {
     // Endpoint untuk mendapatkan data profil (validasi token frontend)
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/user/ping', [AuthController::class, 'ping']);
+    Route::post('/refresh', [AuthController::class, 'refresh']);
+    Route::post('/logout', [AuthController::class, 'logout']);
 
     // Endpoint Notifikasi
     Route::get('/notifications', [NotificationController::class, 'index']);
@@ -74,7 +81,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/user/profile', [\App\Http\Controllers\Api\ProfileController::class, 'update']);
 
     // Endpoint untuk share dashboard
-    Route::post('/dashboard/share', [\App\Http\Controllers\Api\DashboardShareController::class, 'share']);
+    Route::post('/dashboard/share', [\App\Http\Controllers\Api\DashboardShareController::class, 'share'])->middleware('permission:dashboard.share');
     Route::get('/dashboard/shared/{token}', [\App\Http\Controllers\Api\DashboardShareController::class, 'getSharedDashboard']);
 
     // Endpoint Tutorial Dashboard (FR-PM-01)
@@ -91,6 +98,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/tutorial-videos', [TutorialVideoUserController::class, 'index']);
     Route::get('/tutorial-categories', [TutorialVideoUserController::class, 'getCategories']);
     Route::get('/tutorial-videos/{id}', [TutorialVideoUserController::class, 'show']);
+    Route::post('/tutorial-videos/{id}/comments', [TutorialVideoUserController::class, 'storeComment']);
+    Route::post('/tutorial-videos/{id}/interactions', [TutorialVideoUserController::class, 'storeInteraction']);
 
     // Endpoint Daftar Artikel Panduan
     Route::get('/tutorial-articles', [TutorialArticleUserController::class, 'index']);
@@ -157,6 +166,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/master-data/konfigurasi-poin', [PointConfigurationController::class, 'index']);
         Route::get('/master-data/konfigurasi-poin/{id}', [PointConfigurationController::class, 'show']);
         Route::put('/master-data/konfigurasi-poin/{id}', [PointConfigurationController::class, 'update']);
+        
+        // Koreksi Poin (Reversal)
+        Route::get('/master-data/points/{userId}', [\App\Http\Controllers\Api\PointLedgerController::class, 'showUserPoints']);
+        Route::post('/master-data/points/reversal', [\App\Http\Controllers\Api\PointLedgerController::class, 'reversal']);
 
         // CRUD Video Panduan (Khusus Administrator)
         Route::get('/admin/tutorial-categories', [AdminTutorialVideoController::class, 'getCategories']);
@@ -165,6 +178,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // CRUD Artikel Panduan (Khusus Administrator)
         Route::apiResource('/admin/tutorial-articles', AdminTutorialArticleController::class);
+
+        // CRUD Feature Toggles (Khusus Administrator)
+        Route::apiResource('/admin/feature-toggles', FeatureToggleController::class);
     });
 });
 
@@ -175,4 +191,4 @@ Route::get('/news/{id}/export-pdf', [NewsController::class, 'exportPdf']);
 // Endpoint engagement (Share & Comments)
 Route::post('/news/{id}/share', [NewsController::class, 'share']);
 Route::get('/news/{id}/comments', [NewsController::class, 'getComments']);
-Route::post('/news/{id}/comments', [NewsController::class, 'postComment'])->middleware('auth:sanctum');
+Route::post('/news/{id}/comments', [NewsController::class, 'postComment'])->middleware('auth:api');

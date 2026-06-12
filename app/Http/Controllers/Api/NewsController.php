@@ -143,7 +143,8 @@ class NewsController extends Controller
                 'user_id'    => $user->id,
                 'old_status' => null,
                 'new_status' => $news->status,
-                'reason'     => $isSubmit ? 'Berita langsung dikirim untuk proses verifikasi oleh penulis.' : 'Draft berita berhasil dibuat.'
+                'reason'     => $isSubmit ? 'Berita langsung dikirim untuk proses verifikasi oleh penulis.' : 'Draft berita berhasil dibuat.',
+                'ip_address' => $request->ip(),
             ]);
 
             // 4. Proses File Lampiran (Jika Ada)
@@ -224,13 +225,13 @@ class NewsController extends Controller
         // 2. Proteksi Keamanan Akses (RBAC Sederhana)
         // Jika statusnya BUKAN dipublikasikan, maka cek apakah user memiliki akses
         if ($news->status !== 'PUBLISHED') {
-            // Gunakan guard 'sanctum' untuk mengecek token API
-            if (!Auth::guard('sanctum')->check()) {
+            // Gunakan guard 'api' (JWT) untuk mengecek token API
+            if (!Auth::guard('api')->check()) {
                 \Log::warning('Auth check failed. Token missing or invalid.');
                 return response()->json(['message' => 'Akses ditolak. Anda harus login untuk melihat draf/antrean ini.'], 401);
             }
 
-            $user = Auth::guard('sanctum')->user();
+            $user = Auth::guard('api')->user();
             $user->load('role');
 
             \Log::info('User accessed detail:', [
@@ -392,7 +393,8 @@ class NewsController extends Controller
             'user_id'    => $user->id,
             'old_status' => null,
             'new_status' => 'DRAFT',
-            'reason'     => 'Draft berita awal berhasil dibuat.'
+            'reason'     => 'Draft berita awal berhasil dibuat.',
+            'ip_address' => $request->ip(),
         ]);
 
         return response()->json([
