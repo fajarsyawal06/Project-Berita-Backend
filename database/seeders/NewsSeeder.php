@@ -51,6 +51,9 @@ class NewsSeeder extends Seeder
             'location_address' => 'Jl. Diponegoro No.22, Citarum, Kec. Bandung Wetan, Kota Bandung',
             'status'           => 'PUBLISHED',
             'views_count'      => 345,
+            'thumbnail'        => 'https://picsum.photos/seed/news1/800/600',
+            'jenis_publikasi'  => 'UMUM',
+            'jenis_berita'     => 'TEKS',
         ]);
 
         NewsAttachment::create([
@@ -80,6 +83,9 @@ class NewsSeeder extends Seeder
             'longitude'        => 107.622436,
             'location_address' => 'Kecamatan Dayeuhkolot, Kabupaten Bandung',
             'status'           => 'SENT_WAITING_VERIFICATION',
+            'thumbnail'        => 'https://picsum.photos/seed/news2/800/600',
+            'jenis_publikasi'  => 'UMUM',
+            'jenis_berita'     => 'TEKS',
         ]);
 
         // Berita 3: Status DRAFT
@@ -97,6 +103,9 @@ class NewsSeeder extends Seeder
             'why_happened'     => null,
             'how_resolved'     => null,
             'status'           => 'DRAFT',
+            'thumbnail'        => 'https://picsum.photos/seed/news3/800/600',
+            'jenis_publikasi'  => 'INTERNAL',
+            'jenis_berita'     => 'TEKS',
         ]);
 
         NewsAttachment::create([
@@ -134,6 +143,9 @@ class NewsSeeder extends Seeder
                 'shares_count'     => $faker->numberBetween(5, 300),
                 'comments_count'   => $faker->numberBetween(0, 150),
                 'created_at'       => $faker->dateTimeBetween('-1 month', 'now'),
+                'thumbnail'        => 'https://picsum.photos/seed/pub' . $i . '/800/600',
+                'jenis_publikasi'  => $faker->randomElement(['INTERNAL', 'UMUM']),
+                'jenis_berita'     => $faker->randomElement(['TEKS', 'VIDEO', 'FOTO']),
             ]);
         }
 
@@ -153,6 +165,9 @@ class NewsSeeder extends Seeder
                 'why_happened'     => $faker->realText(100),
                 'how_resolved'     => $faker->realText(80),
                 'status'           => 'SENT_WAITING_VERIFICATION',
+                'thumbnail'        => 'https://picsum.photos/seed/wait' . $i . '/800/600',
+                'jenis_publikasi'  => $faker->randomElement(['INTERNAL', 'UMUM']),
+                'jenis_berita'     => $faker->randomElement(['TEKS', 'VIDEO', 'FOTO']),
             ]);
         }
     }

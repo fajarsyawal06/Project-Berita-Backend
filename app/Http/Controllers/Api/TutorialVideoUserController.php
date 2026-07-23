@@ -86,7 +86,7 @@ class TutorialVideoUserController extends Controller
 
         $roleName = $user->role->nama_role ?? '';
         $roleCode = $user->role->kode_role ?? $user->role_id;
-        
+
         if (in_array($roleName, ['Viewer', 'Viewer Umum']) || $roleCode === 'P-05') {
             return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses untuk memberikan saran.'], 403);
         }

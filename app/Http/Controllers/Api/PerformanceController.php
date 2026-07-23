@@ -45,6 +45,9 @@ class PerformanceController extends Controller
             ];
         }
 
+        // Hitung total poin dari point_histories
+        $totalPoin = \App\Models\PointHistory::where('user_id', $user->id)->sum('jumlah_poin');
+
         // 6. Susun Respons JSON agar rapi untuk Frontend
         return response()->json([
             'status' => 'success',
@@ -59,7 +62,7 @@ class PerformanceController extends Controller
                 'statistik' => [
                     'total_berita' => $totalBerita,
                     'total_viewers' => (int) $totalViews,
-                    'akumulasi_poin' => $user->poin_aktif,
+                    'akumulasi_poin' => (int) $totalPoin,
                     'durasi_online_jam' => $durasiOnlineJam,
                 ],
                 'trend_7_hari' => $trend7Hari,
